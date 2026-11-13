@@ -12,7 +12,7 @@
     <!-- Liverpool-style red number 33 kit -->
     <path d="M4 64c0-14.5 12.5-23 28-23s28 8.5 28 23z" fill="#c8102e"/>
     <rect x="27" y="35" width="10" height="11" rx="3" fill="#4a2b1a"/>
-    <path d="M16.5 38.5L32 52 47.5 38.5 47.5 44 32 58 16.5 44Z" fill="#ffffff"/>
+    <path d="M24 47L32 56.5 40 47 40 51 32 60.5 24 51Z" fill="#ffffff"/>
     <text x="32" y="63" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="15" fill="#ffffff" stroke="#7a0a1c" stroke-width="1.1" paint-order="stroke" stroke-linejoin="round">33</text>
     <!-- head -->
     <ellipse cx="20.8" cy="28" rx="2.6" ry="3" fill="#553220"/>
