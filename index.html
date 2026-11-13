@@ -12,6 +12,7 @@
   <meta name="theme-color" content="#060a13">
   <title>Adebayo Ridwanullah Alhassan | Portfolio</title>
   <link rel="canonical" href="https://portfolio.rectorsan.com">
+  <link rel="icon" id="favicon" type="image/svg+xml" href="favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&family=Barlow+Condensed:wght@500;600;700;800&display=swap" rel="stylesheet">
@@ -1485,6 +1486,7 @@
       document.body.classList.toggle('career-mode', career);
       modeSwitch.setAttribute('aria-checked', String(career));
       metaTheme.setAttribute('content', career ? '#08180f' : '#060a13');
+      $('#favicon').setAttribute('href', career ? 'favicon-career.svg' : 'favicon.svg');
       document.title = career
         ? 'Rector · Career Mode | Adebayo Ridwanullah Alhassan'
         : 'Adebayo Ridwanullah Alhassan | Portfolio';
