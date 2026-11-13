@@ -398,6 +398,12 @@
     .timeline-date { font-family: var(--mono); font-size: .8rem; font-weight: 500; color: var(--accent); margin-bottom: 6px; }
     .timeline-item h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 6px; }
     .timeline-item p { color: var(--text-2); font-size: .92rem; }
+    .text-link {
+      display: inline-flex; align-items: center; gap: 6px; margin-top: 8px;
+      font-weight: 600; font-size: .86rem; color: var(--accent); transition: gap var(--transition);
+    }
+    .text-link:hover { gap: 10px; }
+    .text-link svg { width: 14px; height: 14px; }
 
     /* ═══════════════════════════════════════════
        CONTACT / FOOTER
@@ -563,7 +569,7 @@
     .ms:nth-child(2)::before { transition-delay: .15s; } .ms:nth-child(3)::before { transition-delay: .3s; }
     .ms:nth-child(4)::before { transition-delay: .45s; } .ms:nth-child(5)::before { transition-delay: .6s; }
     .ms:nth-child(6)::before { transition-delay: .75s; } .ms:nth-child(7)::before { transition-delay: .9s; }
-    .ms:nth-child(8)::before { transition-delay: 1.05s; }
+    .ms:nth-child(8)::before { transition-delay: 1.05s; } .ms:nth-child(9)::before { transition-delay: 1.2s; }
     .ms:nth-last-child(2)::before { background: linear-gradient(90deg, var(--lime), var(--line)); }
     .ms:last-child::before { display: none; }
     .ms-node {
@@ -850,7 +856,7 @@
           <div class="card reveal reveal-delay-1">
             <div class="about-text">
               <p>I started out in Mechatronics Engineering at the Federal University of Technology, Minna, in 2019. There I learned Solidity and worked as a community manager for several Web3 communities. In 2022 I moved to Computer Science at Summit University, Offa, and graduated in 2025 with Second Class Upper honours.</p>
-              <p>Since 2022 I've worked on PTDF-funded pipeline leak-detection research using CNNs on drone imagery, which is where I picked up grant writing and learned to fly drones. In 2023 I started in UI/UX with a focus on UX research. Today I build cloud infrastructure with Terraform, Ansible, Kubernetes and Argo CD, and full-stack products with TypeScript, React, Node.js and PostgreSQL.</p>
+              <p>Since 2022 I've worked on PTDF-funded pipeline leak-detection research using CNNs on drone imagery, which is where I picked up grant writing and learned to fly drones. In 2023 I started in UI/UX with a focus on UX research. In 2024 I worked with Wizzwoods, a Web3 game, and represented the team at the Web3 Global Conference. Today I build cloud infrastructure with Terraform, Ansible, Kubernetes and Argo CD, and full-stack products with TypeScript, React, Node.js and PostgreSQL.</p>
               <p>I learn best by building the whole thing, from the infrastructure underneath to the interface on top. I also co-lead the SUNO Tech Community, running workshops and build sessions for students.</p>
             </div>
           </div>
@@ -1047,6 +1053,13 @@
             </div>
             <div class="timeline-item">
               <div class="timeline-dot"></div>
+              <div class="timeline-date">2024</div>
+              <h3>Wizzwoods · Web3 game</h3>
+              <p>Worked with Wizzwoods and represented the team at the Web3 Global Conference in October 2024.</p>
+              <a class="text-link" href="https://x.com/Rectorexdegen/status/1850203973539541417" target="_blank" rel="noreferrer">See the post <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><path d="M7 7h10v10"/></svg></a>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-dot"></div>
               <div class="timeline-date">2023 – Present</div>
               <h3>UI/UX Design · UX research focus</h3>
               <p>Started my design journey with a focus on UX research. Since then I've designed product flows for marketplaces, multiplayer games and Web3 apps.</p>
@@ -1137,6 +1150,7 @@
             <dl class="facts">
               <div><dt>Status</dt><dd class="free-agent">Free agent</dd></div>
               <div><dt>Youth club</dt><dd>Mechatronics Eng., FUT Minna · 2019–22</dd></div>
+              <div><dt>Former club</dt><dd>Wizzwoods · 2024</dd></div>
               <div><dt>Academy</dt><dd>Summit University, Offa · 2022–25</dd></div>
               <div><dt>Graduated</dt><dd>2025 · Second Class Upper</dd></div>
               <div><dt>Preferred stack</dt><dd>TypeScript + Kubernetes</dd></div>
@@ -1198,6 +1212,11 @@
             <div class="ms-node"></div>
             <div class="ms-season">2023</div>
             <div class="panel ms-card"><h4>Adds UX to his game</h4><p>Starts the UI/UX journey with a focus on UX research.</p></div>
+          </div>
+          <div class="ms">
+            <div class="ms-node"></div>
+            <div class="ms-season">2024</div>
+            <div class="panel ms-card"><h4>Signs for Wizzwoods</h4><p>Works with the Web3 game and represents it at the Web3 Global Conference. <a href="https://x.com/Rectorexdegen/status/1850203973539541417" target="_blank" rel="noreferrer" style="color:var(--lime);font-weight:600">See the post ↗</a></p></div>
           </div>
           <div class="ms">
             <div class="ms-node"></div>
@@ -1307,7 +1326,8 @@
       '<b>COMMUNITY:</b> SUNO Tech workshops continue under co-lead Rector',
       '<b>FLASHBACK:</b> came through the Mechatronics youth setup at FUT Minna in 2019',
       '<b>TRAINING GROUND:</b> Rector can fly a drone, with a licence still to come',
-      '<b>SCOUT NOTE:</b> UX research rated 17/20'
+      '<b>SCOUT NOTE:</b> UX research rated 17/20',
+      '<b>ARCHIVE:</b> Rector represented Wizzwoods at the Web3 Global Conference, October 2024'
     ];
     const RESULT_LABEL = {
       live:     { badge: 'FT', text: 'Full time · Live' },
