@@ -499,11 +499,8 @@
     }
     .player-head { display: flex; gap: 16px; align-items: center; margin-bottom: 18px; }
     .crest {
-      width: 72px; height: 82px; flex: none; position: relative;
-      display: grid; place-items: center;
-      font-family: var(--cond); font-weight: 800; font-size: 1.6rem; color: #0b1a10;
-      background: linear-gradient(160deg, var(--lime), #7fcf2a);
-      clip-path: polygon(50% 0, 100% 14%, 100% 62%, 50% 100%, 0 62%, 0 14%);
+      width: 84px; height: 84px; flex: none; border-radius: 50%;
+      box-shadow: 0 0 0 3px var(--lime), 0 8px 24px rgba(0,0,0,.35);
     }
     .player-name { font-family: var(--cond); font-weight: 800; font-size: 1.9rem; line-height: .95; text-transform: uppercase; }
     .player-sub { font-size: .82rem; color: var(--chalk-2); margin-top: 6px; }
@@ -1124,7 +1121,7 @@
         <div class="profile-grid">
           <div class="panel player-card reveal">
             <div class="player-head">
-              <div class="crest" aria-hidden="true">AR</div>
+              <img class="crest" src="favicon-career.svg" alt="Cartoon of Rector in a red number 66 jersey" width="84" height="84">
               <div>
                 <div class="player-name">Adebayo R.<br>Alhassan</div>
                 <div class="player-sub">“Rector” · Utility engineer</div>
