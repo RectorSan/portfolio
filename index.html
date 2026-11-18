@@ -79,9 +79,10 @@
     .container { width: min(var(--max-w), calc(100% - 32px)); margin: 0 auto; }
     .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-    /* Mode visibility */
-    body.career-mode .pro-only { display: none !important; }
+    /* Mode visibility: room (default) | pro-mode | career-mode */
+    body:not(.pro-mode) .pro-only { display: none !important; }
     body:not(.career-mode) .career-only { display: none !important; }
+    body.pro-mode .room-only, body.career-mode .room-only { display: none !important; }
 
     /* ═══════════════════════════════════════════
        AMBIENT BACKGROUND
@@ -143,6 +144,7 @@
       50% { transform: scale(1.4); opacity: .7; }
     }
     .nav-links { display: flex; align-items: center; gap: 4px; }
+    .nav-hint { font-size: .82rem; color: var(--text-3); padding: 0 10px; white-space: nowrap; }
     .nav-link {
       padding: 8px 14px; border-radius: 999px; font-size: .875rem;
       font-weight: 500; color: var(--text-2); transition: all var(--transition);
@@ -157,19 +159,20 @@
     }
     .nav-cta:hover { transform: translateY(-1px); box-shadow: 0 4px 20px var(--glow); }
 
-    /* Mode switch */
+    /* Mode switch: 3-segment Room / Pro / Career */
     .mode-switch {
       display: inline-flex; align-items: center; gap: 0;
       padding: 3px; border-radius: 999px;
       background: rgba(148,163,184,.08); border: 1px solid var(--border);
       font-size: .78rem; font-weight: 600; white-space: nowrap;
     }
-    .mode-switch span {
+    .mode-switch button {
       padding: 5px 11px; border-radius: 999px; color: var(--text-2);
-      transition: all var(--transition);
+      transition: all var(--transition); cursor: pointer;
     }
-    .mode-switch[aria-checked="false"] .ms-pro { background: var(--surface-2); color: var(--text); }
-    .mode-switch[aria-checked="true"] .ms-career { background: var(--lime); color: #0b1a10; }
+    .mode-switch button[aria-pressed="true"].ms-room { background: var(--surface-2); color: var(--text); }
+    .mode-switch button[aria-pressed="true"].ms-pro { background: var(--accent); color: #0f172a; }
+    .mode-switch button[aria-pressed="true"].ms-career { background: var(--lime); color: #0b1a10; }
 
     .menu-toggle {
       display: none; width: 40px; height: 40px;
@@ -428,6 +431,91 @@
     .footer-links a:hover { color: var(--accent); }
 
     /* ═══════════════════════════════════════════
+       ROOM MODE — interactive sim-style room
+       ═══════════════════════════════════════════ */
+    :root {
+      --room-wall:   #1f2a3d;
+      --room-wall-2: #182236;
+      --room-floor:  #7a5338;
+      --room-floor-2:#6a4830;
+      --room-glow:   rgba(255,200,120,.35);
+    }
+    .room-wrap { padding: 104px 0 56px; position: relative; z-index: 1; }
+    .room-intro { text-align: center; margin-bottom: 28px; }
+    .room-intro h1 {
+      font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 900; letter-spacing: -.03em;
+      margin-bottom: 10px;
+    }
+    .room-intro p { color: var(--text-2); font-size: 1rem; max-width: 520px; margin: 0 auto; }
+    .room-stage-wrap { max-width: 920px; margin: 0 auto; position: relative; }
+    .room-stage {
+      width: 100%; height: auto; display: block;
+      border-radius: 20px; overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,.45), 0 0 0 1px var(--border);
+      cursor: default;
+    }
+    .hotspot { cursor: pointer; transition: transform .25s cubic-bezier(.34,1.56,.64,1); transform-origin: center; }
+    .hotspot:hover, .hotspot:focus-visible { transform: scale(1.045); outline: none; }
+    .hotspot:hover .hs-glow, .hotspot:focus-visible .hs-glow { opacity: 1; }
+    .hotspot:hover .hs-label, .hotspot:focus-visible .hs-label { opacity: 1; transform: translateY(0); }
+    .hs-glow { opacity: 0; transition: opacity .25s; filter: blur(14px); }
+    .hs-label {
+      opacity: 0; transform: translateY(4px); transition: all .2s;
+      font: 700 15px/1 var(--font); fill: #fff; pointer-events: none;
+    }
+    .hs-label-bg { opacity: 0; transition: opacity .2s; fill: rgba(6,10,19,.85); }
+    .hotspot:hover .hs-label-bg, .hotspot:focus-visible .hs-label-bg { opacity: 1; }
+    .room-hint-row {
+      display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 20px;
+    }
+    .room-hint-row span {
+      font-size: .78rem; color: var(--text-3); padding: 6px 12px; border-radius: 999px;
+      border: 1px solid var(--border); background: rgba(148,163,184,.04);
+    }
+
+    /* Side panel */
+    .room-panel-backdrop {
+      position: fixed; inset: 0; z-index: 150; background: rgba(6,10,19,.6);
+      backdrop-filter: blur(4px); opacity: 0; pointer-events: none; transition: opacity .3s;
+    }
+    .room-panel-backdrop.open { opacity: 1; pointer-events: auto; }
+    .room-panel {
+      position: fixed; top: 0; right: 0; bottom: 0; z-index: 151;
+      width: min(440px, 100%); background: var(--bg-elevated); border-left: 1px solid var(--border);
+      box-shadow: -20px 0 60px rgba(0,0,0,.4);
+      transform: translateX(100%); transition: transform .35s cubic-bezier(.4,0,.2,1);
+      overflow-y: auto; padding: 28px;
+    }
+    .room-panel.open { transform: translateX(0); }
+    .room-panel-close {
+      position: absolute; top: 20px; right: 20px; width: 36px; height: 36px; border-radius: 50%;
+      background: var(--surface-2); display: grid; place-items: center; transition: all var(--transition);
+    }
+    .room-panel-close:hover { background: var(--surface); transform: rotate(90deg); }
+    .room-panel-close svg { width: 18px; height: 18px; }
+    .room-panel h2 { font-size: 1.4rem; font-weight: 800; margin: 0 40px 16px 0; letter-spacing: -.02em; }
+    .room-panel .rp-body p { color: var(--text-2); font-size: .94rem; line-height: 1.65; margin-bottom: 12px; }
+    .room-panel .rp-body strong { color: var(--text); }
+    .room-panel .rp-body ul { display: grid; gap: 10px; margin-bottom: 4px; }
+    .room-panel .rp-body li { font-size: .9rem; color: var(--text-2); }
+    .room-panel .rp-chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 16px; }
+    .room-panel .rp-chip {
+      font-size: .74rem; padding: 4px 10px; border-radius: 6px; background: rgba(148,163,184,.08);
+      border: 1px solid var(--border); color: var(--text-2);
+    }
+    .room-panel .rp-link {
+      display: inline-flex; align-items: center; gap: 6px; color: var(--accent); font-weight: 600;
+      font-size: .9rem; margin-top: 4px;
+    }
+    .room-panel .rp-link svg { width: 14px; height: 14px; }
+
+    @media (max-width: 640px) {
+      .room-panel { width: 100%; top: auto; height: 82vh; border-left: none; border-top: 1px solid var(--border);
+        border-radius: 20px 20px 0 0; transform: translateY(100%); }
+      .room-panel.open { transform: translateY(0); }
+    }
+
+    /* ═══════════════════════════════════════════
        CAREER MODE — page skin
        ═══════════════════════════════════════════ */
     body.career-mode {
@@ -448,7 +536,7 @@
     body.career-mode .nav-link.active { color: var(--lime); background: rgba(184,243,74,.08); }
     body.career-mode .nav-cta { background: var(--lime); color: #0b1a10; }
     body.career-mode .mode-switch { background: rgba(238,245,239,.05); border-color: var(--line); }
-    body.career-mode .mode-switch span { color: var(--chalk-2); }
+    body.career-mode .mode-switch button { color: var(--chalk-2); }
     body.career-mode .footer { border-top-color: var(--line); }
     body.career-mode .footer-inner, body.career-mode .footer-links a { color: var(--chalk-3); }
     body.career-mode .footer-links a:hover { color: var(--lime); }
@@ -746,7 +834,7 @@
       .ticker-label { padding: 8px 10px; }
     }
     @media (max-width: 420px) {
-      .mode-switch span { padding: 5px 8px; }
+      .mode-switch button { padding: 5px 7px; font-size: .72rem; }
       .hero-stats { grid-template-columns: 1fr 1fr; }
       .stats-strip { grid-template-columns: 1fr 1fr; }
       .ss:nth-child(n) { border-left: 1px solid var(--line); border-top: 1px solid var(--line); }
@@ -777,8 +865,9 @@
   <!-- ═══════════ HEADER ═══════════ -->
   <header class="header" id="header">
     <div class="container nav">
-      <a class="logo" href="#home" aria-label="Back to top">Rector<span class="logo-dot"></span></a>
+      <a class="logo" href="#home" aria-label="Back to the room" data-mode-go="room">Rector<span class="logo-dot"></span></a>
       <nav class="nav-links" id="navLinks" aria-label="Sections">
+        <span class="nav-hint room-only">🖱️ Click around the room</span>
         <a class="nav-link pro-only active" href="#home">Home</a>
         <a class="nav-link pro-only" href="#about">About</a>
         <a class="nav-link pro-only" href="#projects">Projects</a>
@@ -790,9 +879,12 @@
         <a class="nav-link career-only" href="#c-trophies">Trophies</a>
         <a class="nav-link career-only" href="#c-results">Results</a>
       </nav>
-      <button class="mode-switch" id="modeSwitch" role="switch" aria-checked="false" aria-label="Career mode">
-        <span class="ms-pro" aria-hidden="true">Pro</span><span class="ms-career" aria-hidden="true">⚽ Career</span>
-      </button>
+      <div class="mode-switch" id="modeSwitch" role="group" aria-label="View mode">
+        <button class="ms-room" data-mode="room" aria-pressed="true">🏠 Room</button>
+        <button class="ms-pro" data-mode="pro" aria-pressed="false">Pro</button>
+        <button class="ms-career" data-mode="career" aria-pressed="false">⚽ Career</button>
+      </div>
+      <a class="nav-cta room-only" href="mailto:ridwanullahaadebayo@gmail.com">Say hello</a>
       <a class="nav-cta pro-only" href="#contact">Get in touch</a>
       <a class="nav-cta career-only" href="#c-offer">Make an offer</a>
       <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="navLinks">
@@ -804,6 +896,190 @@
   <!-- ═══════════════════════════════════════════════════════
        PRO MODE
        ═══════════════════════════════════════════════════════ -->
+  <!-- ═══════════════════════════════════════════════════════
+       ROOM MODE
+       ═══════════════════════════════════════════════════════ -->
+  <main class="room-only" id="room">
+    <div class="container room-wrap">
+      <div class="room-intro reveal visible">
+        <h1>Welcome to my room.</h1>
+        <p>Click anything that glows. Some things open a story, some things take you somewhere else entirely.</p>
+      </div>
+      <div class="room-stage-wrap">
+        <svg class="room-stage" id="roomSvg" viewBox="0 0 960 600" role="group" aria-label="Interactive room">
+          <!-- wall & floor -->
+          <rect x="0" y="0" width="960" height="382" fill="#1f2a3d"/>
+          <rect x="0" y="382" width="960" height="218" fill="#7a5338"/>
+          <g stroke="#6a4830" stroke-width="2" opacity=".6">
+            <line x1="0" y1="430" x2="960" y2="430"/>
+            <line x1="0" y1="478" x2="960" y2="478"/>
+            <line x1="0" y1="526" x2="960" y2="526"/>
+            <line x1="0" y1="574" x2="960" y2="574"/>
+          </g>
+          <ellipse cx="470" cy="500" rx="230" ry="56" fill="#b5542f"/>
+          <ellipse cx="470" cy="500" rx="230" ry="56" fill="none" stroke="#9c4426" stroke-width="4" opacity=".6"/>
+          <ellipse cx="470" cy="500" rx="170" ry="40" fill="none" stroke="#c96a3c" stroke-width="2" opacity=".5"/>
+
+          <!-- window (decorative) -->
+          <rect x="54" y="50" width="168" height="190" rx="6" fill="#0a0f1c" stroke="#141d2e" stroke-width="12"/>
+          <circle cx="90" cy="80" r="1.6" fill="#fff" opacity=".8"/>
+          <circle cx="150" cy="65" r="1.2" fill="#fff" opacity=".6"/>
+          <circle cx="190" cy="95" r="1.6" fill="#fff" opacity=".7"/>
+          <circle cx="120" cy="110" r="1" fill="#fff" opacity=".5"/>
+          <circle cx="170" cy="130" r="1.3" fill="#fff" opacity=".6"/>
+          <path d="M54 220 l20-30 15 12 18-40 14 20 20-25 15 15 12-35 10 50v16H54z" fill="#060a13"/>
+          <line x1="138" y1="50" x2="138" y2="240" stroke="#141d2e" stroke-width="6"/>
+          <line x1="54" y1="145" x2="222" y2="145" stroke="#141d2e" stroke-width="6"/>
+
+          <!-- wall shelf: diploma + trophy (hotspot) -->
+          <g class="hotspot" tabindex="0" role="button" aria-label="Experience and education" data-panel="experience">
+            <ellipse class="hs-glow" cx="650" cy="150" rx="110" ry="80" fill="#38bdf8"/>
+            <rect x="560" y="70" width="86" height="64" rx="3" fill="#2b3650" stroke="#f8fafc" stroke-width="3"/>
+            <rect x="572" y="82" width="62" height="40" fill="#f1f5f9" opacity=".9"/>
+            <line x1="580" y1="92" x2="624" y2="92" stroke="#94a3b8" stroke-width="2"/>
+            <line x1="580" y1="100" x2="618" y2="100" stroke="#94a3b8" stroke-width="2"/>
+            <line x1="580" y1="108" x2="610" y2="108" stroke="#94a3b8" stroke-width="2"/>
+            <rect x="648" y="110" width="110" height="10" rx="3" fill="#4a3625"/>
+            <path d="M685 68c0 16 10 24 10 24s10-8 10-24z" fill="#f5c542"/>
+            <rect d="" x="691" y="92" width="8" height="16" fill="#f5c542"/>
+            <circle cx="695" cy="70" r="16" fill="#f5c542" stroke="#caa02f" stroke-width="2"/>
+            <rect x="686" y="108" width="18" height="6" fill="#caa02f"/>
+            <rect class="hs-label-bg" x="596" y="36" width="108" height="24" rx="6"/>
+            <text class="hs-label" x="650" y="53" text-anchor="middle">🎓 Résumé wall</text>
+          </g>
+
+          <!-- bookshelf (hotspot) -->
+          <g class="hotspot" tabindex="0" role="button" aria-label="Skills" data-panel="skills">
+            <ellipse class="hs-glow" cx="850" cy="300" rx="100" ry="110" fill="#818cf8"/>
+            <rect x="800" y="180" width="110" height="220" rx="4" fill="#2b3650"/>
+            <rect x="808" y="188" width="94" height="4" fill="#1a2336"/>
+            <rect x="808" y="248" width="94" height="4" fill="#1a2336"/>
+            <rect x="808" y="308" width="94" height="4" fill="#1a2336"/>
+            <rect x="808" y="368" width="94" height="4" fill="#1a2336"/>
+            <g>
+              <rect x="812" y="196" width="10" height="50" fill="#38bdf8"/>
+              <rect x="824" y="200" width="10" height="46" fill="#f5c542"/>
+              <rect x="836" y="194" width="10" height="52" fill="#34d399"/>
+              <rect x="848" y="198" width="10" height="48" fill="#818cf8"/>
+              <rect x="860" y="202" width="10" height="44" fill="#fb923c"/>
+              <rect x="872" y="196" width="10" height="50" fill="#f472b6"/>
+              <rect x="812" y="256" width="10" height="50" fill="#34d399"/>
+              <rect x="824" y="260" width="10" height="46" fill="#38bdf8"/>
+              <rect x="836" y="254" width="10" height="52" fill="#fb923c"/>
+              <rect x="848" y="258" width="10" height="48" fill="#f5c542"/>
+              <rect x="860" y="262" width="10" height="44" fill="#f472b6"/>
+              <rect x="872" y="256" width="10" height="50" fill="#818cf8"/>
+            </g>
+            <rect class="hs-label-bg" x="806" y="150" width="92" height="24" rx="6"/>
+            <text class="hs-label" x="852" y="167" text-anchor="middle">📚 Skills</text>
+          </g>
+
+          <!-- door (hotspot → career mode) -->
+          <g class="hotspot" tabindex="0" role="button" aria-label="Walk through the door, into Career Mode" data-mode="career">
+            <ellipse class="hs-glow" cx="930" cy="280" rx="70" ry="130" fill="#b8f34a"/>
+            <rect x="900" y="110" width="60" height="272" fill="#3a2b1d" stroke="#241a11" stroke-width="4"/>
+            <rect x="906" y="118" width="48" height="256" fill="#4a3625"/>
+            <circle cx="944" cy="250" r="4" fill="#f5c542"/>
+            <rect class="hs-label-bg" x="862" y="70" width="136" height="24" rx="6"/>
+            <text class="hs-label" x="930" y="87" text-anchor="middle">🚪 Go pro on the pitch</text>
+          </g>
+
+          <!-- desk -->
+          <rect x="110" y="368" width="270" height="16" rx="3" fill="#4a3625"/>
+          <rect x="122" y="384" width="12" height="80" fill="#3a2b1d"/>
+          <rect x="356" y="384" width="12" height="80" fill="#3a2b1d"/>
+
+          <!-- monitor (hotspot) -->
+          <g class="hotspot" tabindex="0" role="button" aria-label="Projects" data-panel="projects">
+            <ellipse class="hs-glow" cx="190" cy="310" rx="95" ry="95" fill="#38bdf8"/>
+            <rect x="140" y="250" width="100" height="72" rx="6" fill="#111827" stroke="#334155" stroke-width="4"/>
+            <rect x="148" y="258" width="84" height="56" fill="#0b1324"/>
+            <rect x="152" y="264" width="30" height="5" fill="#38bdf8" opacity=".8"/>
+            <rect x="152" y="274" width="50" height="4" fill="#475569"/>
+            <rect x="152" y="282" width="40" height="4" fill="#475569"/>
+            <rect x="152" y="294" width="60" height="10" rx="2" fill="#38bdf8" opacity=".6"/>
+            <rect x="178" y="322" width="24" height="10" fill="#334155"/>
+            <rect x="162" y="332" width="56" height="6" rx="3" fill="#1e293b"/>
+            <rect class="hs-label-bg" x="135" y="214" width="110" height="24" rx="6"/>
+            <text class="hs-label" x="190" y="231" text-anchor="middle">💻 Projects</text>
+          </g>
+
+          <!-- phone (hotspot) -->
+          <g class="hotspot" tabindex="0" role="button" aria-label="Contact" data-panel="contact">
+            <ellipse class="hs-glow" cx="280" cy="350" rx="55" ry="55" fill="#34d399"/>
+            <rect x="262" y="332" width="34" height="18" rx="4" fill="#1e293b" transform="rotate(-10 279 341)"/>
+            <rect x="266" y="336" width="26" height="4" rx="2" fill="#34d399" transform="rotate(-10 279 341)" opacity=".8"/>
+            <rect class="hs-label-bg" x="238" y="300" width="84" height="24" rx="6"/>
+            <text class="hs-label" x="280" y="317" text-anchor="middle">📞 Contact</text>
+          </g>
+
+          <!-- mail tray (hotspot) -->
+          <g class="hotspot" tabindex="0" role="button" aria-label="References" data-panel="references">
+            <ellipse class="hs-glow" cx="340" cy="356" rx="50" ry="45" fill="#fbbf24"/>
+            <rect x="320" y="348" width="42" height="16" rx="2" fill="#92400e"/>
+            <path d="M320 348l21 12 21-12" fill="none" stroke="#fde68a" stroke-width="2"/>
+            <rect x="326" y="338" width="34" height="12" rx="1" fill="#fde68a" transform="rotate(-6 343 344)"/>
+            <rect class="hs-label-bg" x="296" y="300" width="96" height="24" rx="6"/>
+            <text class="hs-label" x="344" y="317" text-anchor="middle">✉️ References</text>
+          </g>
+
+          <!-- photo frame (hotspot) -->
+          <g class="hotspot" tabindex="0" role="button" aria-label="About me" data-panel="about">
+            <ellipse class="hs-glow" cx="130" cy="352" rx="45" ry="45" fill="#f472b6"/>
+            <rect x="114" y="338" width="30" height="34" rx="2" fill="#f8fafc" transform="rotate(8 129 355)"/>
+            <rect x="119" y="343" width="20" height="20" fill="#818cf8" transform="rotate(8 129 355)"/>
+            <rect class="hs-label-bg" x="86" y="300" width="88" height="24" rx="6"/>
+            <text class="hs-label" x="130" y="317" text-anchor="middle">🖼️ About me</text>
+          </g>
+
+          <!-- arcade cabinet (hotspot → pro mode) -->
+          <g class="hotspot" tabindex="0" role="button" aria-label="Open the full resume view" data-mode="pro">
+            <ellipse class="hs-glow" cx="500" cy="340" rx="85" ry="100" fill="#818cf8"/>
+            <rect x="462" y="256" width="76" height="128" rx="6" fill="#2b3650" stroke="#1a2336" stroke-width="4"/>
+            <rect x="470" y="264" width="60" height="42" fill="#0b1324"/>
+            <rect x="476" y="270" width="48" height="4" fill="#38bdf8" opacity=".8"/>
+            <rect x="476" y="280" width="36" height="4" fill="#475569"/>
+            <rect x="476" y="288" width="30" height="4" fill="#818cf8"/>
+            <circle cx="486" cy="326" r="9" fill="#1a2336"/>
+            <circle cx="486" cy="326" r="4" fill="#f5c542"/>
+            <circle cx="510" cy="320" r="6" fill="#ef4444"/>
+            <circle cx="524" cy="320" r="6" fill="#38bdf8"/>
+            <rect class="hs-label-bg" x="446" y="222" width="110" height="24" rx="6"/>
+            <text class="hs-label" x="500" y="239" text-anchor="middle">🕹️ Full resume</text>
+          </g>
+
+          <!-- plant (hotspot → easter egg) -->
+          <g class="hotspot" tabindex="0" role="button" aria-label="A fun fact" data-panel="fun">
+            <ellipse class="hs-glow" cx="60" cy="470" rx="55" ry="60" fill="#34d399"/>
+            <rect x="40" y="462" width="40" height="36" rx="3" fill="#92400e"/>
+            <path d="M60 462c-6-20-26-24-30-14 10 10 20 8 30 14zM60 462c6-24 30-28 34-16-12 10-22 6-34 16zM60 462c-2-28 16-36 20-26-8 12-14 14-20 26z" fill="#22c55e"/>
+            <rect class="hs-label-bg" x="18" y="420" width="84" height="24" rx="6"/>
+            <text class="hs-label" x="60" y="437" text-anchor="middle">🌿 Water me</text>
+          </g>
+        </svg>
+      </div>
+      <div class="room-hint-row reveal visible">
+        <span>🎓 Résumé wall → experience</span>
+        <span>📚 Shelf → skills</span>
+        <span>💻 Monitor → projects</span>
+        <span>📞 Phone → contact</span>
+        <span>✉️ Mail → references</span>
+        <span>🖼️ Frame → about</span>
+        <span>🚪 Door → Career Mode</span>
+        <span>🕹️ Arcade → full résumé</span>
+      </div>
+    </div>
+  </main>
+
+  <!-- Room content panel -->
+  <div class="room-panel-backdrop" id="roomBackdrop"></div>
+  <aside class="room-panel" id="roomPanel" role="dialog" aria-modal="true" aria-label="Room panel">
+    <button class="room-panel-close" id="roomPanelClose" aria-label="Close">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+    </button>
+    <div id="roomPanelBody"></div>
+  </aside>
+
   <main class="pro-only" id="pro">
     <!-- HERO -->
     <section class="hero section" id="home">
@@ -1530,41 +1806,157 @@
 
     $$('.reveal').forEach(el => revealObserver.observe(el));
 
-    /* ─────────── Mode switching ─────────── */
+    /* ─────────── Mode switching: room | pro | career ─────────── */
     const modeSwitch = $('#modeSwitch');
     const kickoff = $('#kickoff');
     const metaTheme = $('meta[name="theme-color"]');
+    const KICKOFF_TEXT = { room: 'Back home', pro: 'Full resume', career: 'Kick off' };
+    const TITLES = {
+      room: "Rector's Room | Ridwanullah Alhassan Adebayo",
+      pro: 'Ridwanullah Alhassan Adebayo | Portfolio',
+      career: 'Rector · Career Mode | Ridwanullah Alhassan Adebayo'
+    };
+    const THEME_COLOR = { room: '#060a13', pro: '#060a13', career: '#08180f' };
 
     function applyMode(mode) {
-      const career = mode === 'career';
-      document.body.classList.toggle('career-mode', career);
-      modeSwitch.setAttribute('aria-checked', String(career));
-      metaTheme.setAttribute('content', career ? '#08180f' : '#060a13');
-      $('#favicon').setAttribute('href', career ? 'favicon-career.svg' : 'favicon.svg');
-      document.title = career
-        ? 'Rector · Career Mode | Ridwanullah Alhassan Adebayo'
-        : 'Ridwanullah Alhassan Adebayo | Portfolio';
+      document.body.classList.toggle('pro-mode', mode === 'pro');
+      document.body.classList.toggle('career-mode', mode === 'career');
+      $$('.mode-switch button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === mode)));
+      metaTheme.setAttribute('content', THEME_COLOR[mode]);
+      $('#favicon').setAttribute('href', mode === 'career' ? 'favicon-career.svg' : 'favicon.svg');
+      document.title = TITLES[mode];
       const url = new URL(location.href);
-      career ? url.searchParams.set('mode', 'career') : url.searchParams.delete('mode');
+      mode === 'room' ? url.searchParams.delete('mode') : url.searchParams.set('mode', mode);
       history.replaceState(null, '', url.pathname + url.search);
       store.set('rector-mode', mode);
       closeMenu();
+      closeRoomPanel();
       window.scrollTo(0, 0);
     }
 
     function switchMode(mode) {
       if (reduceMotion) return applyMode(mode);
-      $('#kickoffText').textContent = mode === 'career' ? 'Kick off' : 'Full time';
+      $('#kickoffText').textContent = KICKOFF_TEXT[mode] || 'Loading';
       kickoff.classList.remove('run'); void kickoff.offsetWidth; kickoff.classList.add('run');
       setTimeout(() => applyMode(mode), 420);
     }
 
-    modeSwitch.addEventListener('click', () => switchMode(document.body.classList.contains('career-mode') ? 'pro' : 'career'));
+    $$('.mode-switch button').forEach(b => b.addEventListener('click', () => switchMode(b.dataset.mode)));
     $$('[data-mode-go]').forEach(b => b.addEventListener('click', () => switchMode(b.dataset.modeGo)));
 
+    /* ─────────── Room panels ─────────── */
+    const ROOM_PANELS = {
+      about: {
+        title: '🖼️ About me',
+        html: `<div class="rp-body">
+          <p>I'm <strong>Ridwanullah Alhassan Adebayo</strong> — "Rector." I started out in Mechatronics Engineering at the Federal University of Technology, Minna, learned Solidity, and managed Web3 communities. In 2022 I moved into Computer Science at Summit University, Offa.</p>
+          <p>Since then I've worked across cloud infrastructure, full-stack products, applied AI research, Web3 and UX design — and run community management and support for a live crypto community.</p>
+          <p>I learn best by building the whole thing, and by understanding a community from the inside.</p>
+        </div>`
+      },
+      projects: {
+        title: '💻 Projects',
+        html: `<div class="rp-body">
+          <p><strong>Celebrity Games</strong> — a multiplayer life-simulation game I built on Node.js, PostgreSQL and WebSockets, with live server events and interactive career paths.</p>
+          <div class="rp-chip-row"><span class="rp-chip">Node.js</span><span class="rp-chip">PostgreSQL</span><span class="rp-chip">WebSockets</span><span class="rp-chip">Docker</span></div>
+          <a class="rp-link" href="https://Playcelebritygames-cyan.vercel.app" target="_blank" rel="noreferrer">Play it live ↗</a>
+          <p style="margin-top:18px"><strong>Hermes Hub</strong> — an on-demand marketplace connecting buyers with vetted artisans.</p>
+          <p><strong>Multi-Node K8s GitOps Infrastructure</strong> — a Kubernetes cluster automated with Terraform, Ansible and Argo CD.</p>
+          <p><strong>Crop Disease Detection</strong> — a CNN image classifier, 87.45% test accuracy.</p>
+          <a class="rp-link" href="#projects" data-mode-go="pro">See every project in full →</a>
+        </div>`
+      },
+      skills: {
+        title: '📚 Skills',
+        html: `<div class="rp-body">
+          <ul>
+            <li><strong>Cloud &amp; DevOps:</strong> Kubernetes, Docker, Terraform, Ansible, Argo CD/GitOps</li>
+            <li><strong>Backend:</strong> Node.js, TypeScript, PostgreSQL, WebSockets, Python</li>
+            <li><strong>Frontend:</strong> React 18, Tailwind CSS, Vite</li>
+            <li><strong>AI &amp; Research:</strong> Computer vision, CNNs, dataset annotation</li>
+            <li><strong>Web3:</strong> Solidity, Solana, community management</li>
+            <li><strong>Product &amp; Design:</strong> UX research, UI design, Figma</li>
+          </ul>
+        </div>`
+      },
+      experience: {
+        title: '🎓 Experience & education',
+        html: `<div class="rp-body">
+          <p><strong>BSc Computer Science</strong> — Summit University, Offa · 2022–2025, Second Class Upper.</p>
+          <p><strong>Mechatronics Engineering</strong> — FUT Minna · 2019–2022.</p>
+          <p><strong>Community Manager &amp; User Support</strong> — Synex Coin · Dec 2021 – Jan 2023. Known there as "Rector."</p>
+          <p><strong>Web3 Contributor</strong> — Wizzwoods · 2024, represented the team at the Web3 Global Conference.</p>
+          <a class="rp-link" href="#experience" data-mode-go="pro">See the full timeline →</a>
+        </div>`
+      },
+      contact: {
+        title: '📞 Contact',
+        html: `<div class="rp-body">
+          <p>Open to roles, internships and collaborations — especially anywhere that mixes community and game design.</p>
+          <a class="rp-link" href="mailto:ridwanullahaadebayo@gmail.com">✉️ ridwanullahaadebayo@gmail.com</a><br>
+          <a class="rp-link" href="https://www.linkedin.com/in/theradebayo/" target="_blank" rel="noreferrer">LinkedIn ↗</a><br>
+          <a class="rp-link" href="https://github.com/RectorSan" target="_blank" rel="noreferrer">GitHub ↗</a>
+        </div>`
+      },
+      references: {
+        title: '✉️ References',
+        html: `<div class="rp-body">
+          <p><strong>JIB</strong> — CEO, Synex Coin. Knows me as "Rector."</p>
+          <a class="rp-link" href="https://t.me/JIBSIL" target="_blank" rel="noreferrer">t.me/JIBSIL ↗</a>
+          <p style="margin-top:16px"><strong>Professor Abiodun Musa Aibinu</strong> — Principal Investigator, IASRG; Vice Chancellor, Summit University.</p>
+          <a class="rp-link" href="https://www.aibinu.com.ng" target="_blank" rel="noreferrer">aibinu.com.ng ↗</a>
+        </div>`
+      },
+      fun: {
+        title: '🌿 Fun fact',
+        html: `<div class="rp-body">
+          <p>I've put serious hours into sim and life-management games — Torn City, The Sims and more — and this whole room is basically what happens when that habit meets a portfolio site.</p>
+          <p>I've got concrete feature ideas for games like Lagos Life, born from actually living inside games like this, not just watching from outside.</p>
+        </div>`
+      }
+    };
+
+    const roomBackdrop = $('#roomBackdrop');
+    const roomPanel = $('#roomPanel');
+    const roomPanelBody = $('#roomPanelBody');
+
+    function openRoomPanel(key) {
+      const data = ROOM_PANELS[key];
+      if (!data) return;
+      roomPanelBody.innerHTML = `<h2>${data.title}</h2>${data.html}`;
+      roomPanelBody.querySelectorAll('[data-mode-go]').forEach(b => b.addEventListener('click', e => {
+        e.preventDefault();
+        switchMode(b.dataset.modeGo);
+      }));
+      roomBackdrop.classList.add('open');
+      roomPanel.classList.add('open');
+    }
+    function closeRoomPanel() {
+      roomBackdrop.classList.remove('open');
+      roomPanel.classList.remove('open');
+    }
+    $('#roomPanelClose').addEventListener('click', closeRoomPanel);
+    roomBackdrop.addEventListener('click', closeRoomPanel);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeRoomPanel(); });
+
+    const roomSvg = $('#roomSvg');
+    if (roomSvg) {
+      roomSvg.querySelectorAll('.hotspot').forEach(hs => {
+        const activate = () => {
+          if (hs.dataset.mode) switchMode(hs.dataset.mode);
+          else if (hs.dataset.panel) openRoomPanel(hs.dataset.panel);
+        };
+        hs.addEventListener('click', activate);
+        hs.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activate(); } });
+      });
+    }
+
     const params = new URLSearchParams(location.search);
-    const initial = params.get('mode') === 'career' ? 'career' : params.get('mode') === 'pro' ? 'pro' : store.get('rector-mode');
-    if (initial === 'career') applyMode('career');
+    const fromParam = params.get('mode');
+    const initial = (fromParam === 'pro' || fromParam === 'career') ? fromParam
+      : (!fromParam && (store.get('rector-mode') === 'pro' || store.get('rector-mode') === 'career')) ? store.get('rector-mode')
+      : 'room';
+    if (initial !== 'room') applyMode(initial);
   </script>
 </body>
 </html>
