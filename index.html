@@ -961,6 +961,7 @@
         <span>🖼️ Frame → about</span>
         <span>🚪 Door → Career Mode</span>
         <span>🕹️ Arcade → full résumé</span>
+        <span>🛏️ Bed → downtime</span>
       </div>
     </div>
   </main>
@@ -1808,6 +1809,13 @@
           <p>I've put serious hours into sim and life-management games — Torn City, The Sims and more — and this whole room is basically what happens when that habit meets a portfolio site.</p>
           <p>I've got concrete feature ideas for games like Lagos Life, born from actually living inside games like this, not just watching from outside.</p>
         </div>`
+      },
+      rest: {
+        title: '🛏️ Downtime',
+        html: `<div class="rp-body">
+          <p>When I'm not building, I'm usually still inside a simulation of some kind — just playing instead of shipping one.</p>
+          <p>That back-and-forth is basically my whole pitch: I know what makes these games fun from the inside, and I know how to build the thing that runs them.</p>
+        </div>`
       }
     };
 
@@ -1854,20 +1862,21 @@
       }
 
       const HOTSPOTS = [
-        { key: 'about',        x: -4.3, z: -1.8, r: 1.25, label: '🖼️ About me' },
-        { key: 'projects',     x: -3.0, z: -1.8, r: 1.35, label: '💻 Projects' },
-        { key: 'contact',      x: -2.0, z: -1.8, r: 1.1,  label: '📞 Contact' },
-        { key: 'references',  x: -1.1, z: -1.8, r: 1.1,  label: '✉️ References' },
-        { key: 'experience',   x: 1.0,  z: -2.6, r: 1.6,  label: '🎓 Experience & education' },
-        { key: 'skills',       x: 3.6,  z: -2.5, r: 1.6,  label: '📚 Skills' },
-        { key: 'mode:career',  x: 5.0,  z: -2.6, r: 1.6,  label: '🚪 Walk through to Career Mode' },
-        { key: 'mode:pro',     x: 3.2,  z: 1.3,  r: 1.5,  label: '🕹️ Open the full résumé' },
-        { key: 'fun',          x: -4.6, z: 1.5,  r: 1.1,  label: '🌿 Fun fact' }
+        { key: 'about',        x: 0.4,  z: -2.2, r: 1.1,  label: '🖼️ About me' },
+        { key: 'projects',     x: 1.1,  z: -2.2, r: 1.25, label: '💻 Projects' },
+        { key: 'contact',      x: 1.7,  z: -2.2, r: 1.0,  label: '📞 Contact' },
+        { key: 'references',  x: 2.1,  z: -2.15,r: 1.0,  label: '✉️ References' },
+        { key: 'experience',   x: -1.3, z: -2.3, r: 1.6,  label: '🎓 Experience & education' },
+        { key: 'skills',       x: 4.0,  z: -2.3, r: 1.6,  label: '📚 Skills' },
+        { key: 'mode:career',  x: 4.7,  z: 1.0,  r: 1.6,  label: '🚪 Walk through to Career Mode' },
+        { key: 'mode:pro',     x: 3.8,  z: 1.8,  r: 1.5,  label: '🕹️ Open the full résumé' },
+        { key: 'fun',          x: -4.8, z: 2.0,  r: 1.1,  label: '🌿 Fun fact' },
+        { key: 'rest',         x: -4.0, z: -1.0, r: 1.7,  label: '🛏️ Downtime' }
       ];
-      const ROOM_X = 5.4, ROOM_Z_BACK = -3.3, ROOM_Z_FRONT = 3.6;
+      const ROOM_X = 5.6, ROOM_Z_BACK = -3.3, ROOM_Z_FRONT = 3.9;
 
       const scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x141c2b);
+      scene.background = new THREE.Color(0x2a2338);
       const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 60);
       let renderer;
       try {
@@ -1877,115 +1886,249 @@
         return;
       }
       renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      if (THREE.ColorManagement) THREE.ColorManagement.enabled = true;
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.3;
 
-      scene.add(new THREE.HemisphereLight(0x8fa8c9, 0x2a2010, 0.9));
-      const lamp = new THREE.DirectionalLight(0xfff3d6, 0.9);
-      lamp.position.set(4, 6, 3);
-      scene.add(lamp);
+      // Lighting: bright warm key light (shadows) + brighter ambient + warm lamp fill
+      scene.add(new THREE.HemisphereLight(0x7a8ac0, 0x3a2e22, 0.75));
+      const keyLight = new THREE.DirectionalLight(0xffdfae, 1.7);
+      keyLight.position.set(3.5, 6.5, 2.5);
+      keyLight.castShadow = true;
+      keyLight.shadow.mapSize.set(1024, 1024);
+      keyLight.shadow.camera.left = -7; keyLight.shadow.camera.right = 7;
+      keyLight.shadow.camera.top = 7; keyLight.shadow.camera.bottom = -7;
+      keyLight.shadow.camera.near = 1; keyLight.shadow.camera.far = 18;
+      keyLight.shadow.bias = -0.002;
+      scene.add(keyLight);
+      scene.add(new THREE.AmbientLight(0xffffff, 0.35));
+      const lampLight = new THREE.PointLight(0xffc98a, 1.6, 8, 2);
+      lampLight.position.set(-2.1, 1.35, -2.3);
+      scene.add(lampLight);
+      const monitorGlow = new THREE.PointLight(0x7fd4ff, 0.7, 4, 2);
+      monitorGlow.position.set(1.1, 1.2, -2.6);
+      scene.add(monitorGlow);
 
-      // Floor & rug
-      const floor = new THREE.Mesh(
-        new THREE.PlaneGeometry(ROOM_X * 2, ROOM_Z_FRONT - ROOM_Z_BACK),
-        new THREE.MeshStandardMaterial({ color: 0x7a5338, roughness: 0.95 })
-      );
-      floor.rotation.x = -Math.PI / 2;
-      floor.position.set(0, 0, (ROOM_Z_BACK + ROOM_Z_FRONT) / 2);
-      scene.add(floor);
-      const rug = new THREE.Mesh(
-        new THREE.CircleGeometry(2.1, 40),
-        new THREE.MeshStandardMaterial({ color: 0xb5542f, roughness: 0.9 })
-      );
-      rug.rotation.x = -Math.PI / 2;
-      rug.position.set(0.3, 0.01, -0.6);
-      scene.add(rug);
-
-      // Back wall & window
-      const wall = new THREE.Mesh(
-        new THREE.PlaneGeometry(ROOM_X * 2, 4),
-        new THREE.MeshStandardMaterial({ color: 0x1f2a3d, roughness: 1 })
-      );
-      wall.position.set(0, 2, ROOM_Z_BACK);
-      scene.add(wall);
-      const window1 = new THREE.Mesh(
-        new THREE.PlaneGeometry(1.5, 1.7),
-        new THREE.MeshBasicMaterial({ color: 0x0a1630 })
-      );
-      window1.position.set(-4.2, 2.3, ROOM_Z_BACK + 0.02);
-      scene.add(window1);
-
-      function addBox(w, h, d, color, x, y, z, roughness) {
+      function addBox(w, h, d, color, x, y, z, opts) {
         const mesh = new THREE.Mesh(
           new THREE.BoxGeometry(w, h, d),
-          new THREE.MeshStandardMaterial({ color, roughness: roughness ?? 0.8 })
+          new THREE.MeshStandardMaterial({ color, roughness: (opts && opts.roughness) ?? 0.82, metalness: (opts && opts.metalness) ?? 0.05 })
         );
         mesh.position.set(x, y, z);
+        mesh.castShadow = true; mesh.receiveShadow = true;
         scene.add(mesh);
         return mesh;
       }
+      function addAO(x, z, rx, rz) {
+        const ao = new THREE.Mesh(
+          new THREE.CircleGeometry(1, 24),
+          new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.16, depthWrite: false })
+        );
+        ao.scale.set(rx, rz, 1);
+        ao.rotation.x = -Math.PI / 2;
+        ao.position.set(x, 0.012, z);
+        scene.add(ao);
+      }
 
-      // Desk + items
-      addBox(3.9, 0.12, 0.7, 0x4a3625, -2.7, 0.85, -1.9);
-      addBox(0.1, 0.85, 0.1, 0x3a2b1d, -4.5, 0.42, -2.1);
-      addBox(0.1, 0.85, 0.1, 0x3a2b1d, -0.9, 0.42, -2.1);
-      addBox(0.7, 0.55, 0.05, 0x111827, -3.0, 1.2, -1.95);
-      addBox(0.6, 0.45, 0.02, 0x38bdf8, -3.0, 1.2, -1.92).material = new THREE.MeshBasicMaterial({ color: 0x1d6fa5 });
-      addBox(0.1, 0.4, 0.1, 0x334155, -3.0, 0.95, -1.95);
-      addBox(0.22, 0.1, 0.42, 0x1e293b, -2.0, 0.95, -1.88);
-      addBox(0.3, 0.06, 0.22, 0x92400e, -1.1, 0.93, -1.85);
-      addBox(0.22, 0.26, 0.02, 0xf8fafc, -4.3, 1.05, -1.84);
+      // Cheap glow: a radial-gradient canvas sprite, additive-blended — no postprocessing pipeline needed
+      const glowTex = (() => {
+        const c = document.createElement('canvas'); c.width = c.height = 128;
+        const ctx = c.getContext('2d');
+        const g = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+        g.addColorStop(0, 'rgba(255,255,255,1)');
+        g.addColorStop(0.4, 'rgba(255,255,255,.55)');
+        g.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = g; ctx.fillRect(0, 0, 128, 128);
+        return new THREE.CanvasTexture(c);
+      })();
+      function addGlow(x, y, z, size, color, opacity) {
+        const sprite = new THREE.Sprite(new THREE.SpriteMaterial({
+          map: glowTex, color, transparent: true, opacity: opacity ?? 0.9,
+          blending: THREE.AdditiveBlending, depthWrite: false
+        }));
+        sprite.position.set(x, y, z);
+        sprite.scale.set(size, size, 1);
+        scene.add(sprite);
+        return sprite;
+      }
+
+      // Floor
+      const floor = new THREE.Mesh(
+        new THREE.PlaneGeometry(ROOM_X * 2, ROOM_Z_FRONT - ROOM_Z_BACK),
+        new THREE.MeshStandardMaterial({ color: 0x9a6b42, roughness: 0.92 })
+      );
+      floor.rotation.x = -Math.PI / 2;
+      floor.position.set(0, 0, (ROOM_Z_BACK + ROOM_Z_FRONT) / 2);
+      floor.receiveShadow = true;
+      scene.add(floor);
+      for (let i = 1; i <= 5; i++) {
+        const plank = new THREE.Mesh(new THREE.PlaneGeometry(ROOM_X * 2, 0.025), new THREE.MeshStandardMaterial({ color: 0x5c3f27, roughness: 1 }));
+        plank.rotation.x = -Math.PI / 2;
+        plank.position.set(0, 0.006, ROOM_Z_BACK + i * ((ROOM_Z_FRONT - ROOM_Z_BACK) / 6));
+        scene.add(plank);
+      }
+      const rug = new THREE.Mesh(
+        new THREE.CircleGeometry(1.95, 40),
+        new THREE.MeshStandardMaterial({ color: 0x1f8f7f, roughness: 0.92 })
+      );
+      rug.rotation.x = -Math.PI / 2;
+      rug.position.set(-0.6, 0.01, -0.5);
+      rug.receiveShadow = true;
+      scene.add(rug);
+
+      // Back wall, wainscoting, window + curtains
+      const wall = new THREE.Mesh(
+        new THREE.PlaneGeometry(ROOM_X * 2, 4),
+        new THREE.MeshStandardMaterial({ color: 0x453a5c, roughness: 0.95 })
+      );
+      wall.position.set(0, 2, ROOM_Z_BACK);
+      wall.receiveShadow = true;
+      scene.add(wall);
+      const rightWall = new THREE.Mesh(
+        new THREE.PlaneGeometry(ROOM_Z_FRONT - ROOM_Z_BACK, 4),
+        new THREE.MeshStandardMaterial({ color: 0x3d3350, roughness: 0.95 })
+      );
+      rightWall.rotation.y = -Math.PI / 2;
+      rightWall.position.set(ROOM_X, 2, (ROOM_Z_BACK + ROOM_Z_FRONT) / 2);
+      rightWall.receiveShadow = true;
+      scene.add(rightWall);
+      addBox(ROOM_X * 2, 0.3, 0.04, 0x241c2c, 0, 0.6, ROOM_Z_BACK + 0.02);
+      addBox(1.6, 1.8, 0.05, 0x120f22, -4.5, 2.3, ROOM_Z_BACK + 0.03).material = new THREE.MeshBasicMaterial({ color: 0x3a4f9e });
+      addGlow(-4.5, 2.3, ROOM_Z_BACK + 0.15, 1.6, 0x6f8fe0, 0.35);
+      [-0.95, 0.95].forEach(off => addBox(0.26, 2.0, 0.08, 0xb5542f, -4.5 + off, 2.3, ROOM_Z_BACK + 0.1, { roughness: 0.9 }));
+      addBox(1.9, 0.08, 0.1, 0x4a3625, -4.5, 3.25, ROOM_Z_BACK + 0.1);
+
+      // Bed
+      const bedX = -4.0;
+      addBox(2.6, 0.45, 2.5, 0x3a2b1d, bedX, 0.22, -1.85, { roughness: 0.9 });
+      addBox(2.4, 0.3, 2.3, 0xeadfca, bedX, 0.48, -1.85, { roughness: 0.95 });
+      addBox(2.7, 0.9, 0.18, 0x3a2b1d, bedX, 0.65, -3.05, { roughness: 0.9 });
+      addBox(2.3, 0.28, 0.5, 0xd64550, bedX, 0.66, -1.0, { roughness: 0.9 });
+      addBox(0.55, 0.16, 0.42, 0xfdf6ec, bedX - 0.7, 0.66, -2.75, { roughness: 0.95 });
+      addBox(0.55, 0.16, 0.42, 0xfdf6ec, bedX + 0.7, 0.66, -2.75, { roughness: 0.95 });
+      addAO(bedX, -1.0, 1.3, 1.2);
+
+      // Nightstand + lamp
+      addBox(0.5, 0.5, 0.42, 0x4a3625, -2.1, 0.25, -2.3);
+      addBox(0.1, 0.22, 0.1, 0x3a2b1d, -2.1, 0.61, -2.3);
+      const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.1, 12, 12), new THREE.MeshBasicMaterial({ color: 0xffe6b0 }));
+      bulb.position.set(-2.1, 0.78, -2.3);
+      scene.add(bulb);
+      lampLight.position.copy(bulb.position);
+      addGlow(-2.1, 0.78, -2.3, 0.9, 0xffc98a, 0.8);
+      addAO(-2.1, -2.3, 0.42, 0.38);
+
+      // Desk + monitor + items
+      addBox(2.3, 0.1, 0.7, 0x4a3625, 1.1, 0.85, -2.65);
+      addBox(0.08, 0.8, 0.08, 0x3a2b1d, 0.1, 0.42, -2.85);
+      addBox(0.08, 0.8, 0.08, 0x3a2b1d, 2.1, 0.42, -2.85);
+      addBox(0.62, 0.48, 0.05, 0x111827, 1.1, 1.18, -2.72);
+      addBox(0.5, 0.36, 0.02, 0x38bdf8, 1.1, 1.18, -2.69).material = new THREE.MeshBasicMaterial({ color: 0x4fc3f7 });
+      addGlow(1.1, 1.18, -2.6, 0.7, 0x7fd4ff, 0.6);
+      addBox(0.1, 0.35, 0.1, 0x334155, 1.1, 0.95, -2.72);
+      addBox(0.5, 0.05, 0.2, 0x1e293b, 1.1, 0.91, -2.6);
+      addBox(0.22, 0.1, 0.42, 0x1e293b, 1.7, 0.92, -2.55);
+      addBox(0.3, 0.06, 0.22, 0x92400e, 2.1, 0.9, -2.5);
+      addBox(0.22, 0.26, 0.02, 0xf8fafc, 0.4, 1.0, -2.5);
+      addBox(0.33, 0.1, 0.18, 0x1a1a1a, 1.1, 0.46, -2.65, { roughness: 0.6 });
+      addAO(1.1, -2.6, 1.15, 0.85);
 
       // Wall shelf: diploma + trophy
-      addBox(1.0, 0.08, 0.3, 0x4a3625, 1.0, 1.65, -3.1);
-      addBox(0.5, 0.4, 0.03, 0xf1f5f9, 1.0, 2.1, -3.2);
-      const trophyCup = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.22, 10), new THREE.MeshStandardMaterial({ color: 0xf5c542, metalness: 0.4, roughness: 0.4 }));
-      trophyCup.position.set(0.7, 1.82, -3.1);
+      addBox(1.0, 0.08, 0.26, 0x4a3625, -1.3, 1.65, -3.15);
+      addBox(0.5, 0.4, 0.03, 0xf1f5f9, -1.3, 2.1, -3.2);
+      const trophyCup = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.22, 10), new THREE.MeshStandardMaterial({ color: 0xf5c542, metalness: 0.55, roughness: 0.3 }));
+      trophyCup.position.set(-1.0, 1.82, -3.1);
+      trophyCup.castShadow = true;
       scene.add(trophyCup);
 
-      // Bookshelf
-      addBox(1.1, 2.0, 0.4, 0x2b3650, 3.6, 1.0, -2.9);
-      const bookColors = [0x38bdf8, 0xf5c542, 0x34d399, 0x818cf8, 0xfb923c, 0xf472b6];
-      bookColors.forEach((c, i) => addBox(0.08, 0.45, 0.3, c, 3.2 + i * 0.13, 1.75, -2.85));
+      // Bookshelf — open frame with 3 real tiers, not a block with books glued to the top
+      const shelfX = 4.0, shelfWood = 0x4a3625, shelfInnerZ = -3.0;
+      addBox(0.07, 2.0, 0.42, shelfWood, shelfX - 0.52, 1.0, -3.05); // left side
+      addBox(0.07, 2.0, 0.42, shelfWood, shelfX + 0.52, 1.0, -3.05); // right side
+      addBox(1.04, 0.42, 0.02, 0x241c15, shelfX, 1.0, -3.24, { roughness: 0.95 }); // back panel
+      const shelfBoardYs = [0.06, 0.73, 1.4, 1.96];
+      shelfBoardYs.forEach(y => addBox(1.04, 0.05, 0.4, shelfWood, shelfX, y, -3.05));
 
-      // Door
-      addBox(0.7, 2.1, 0.12, 0x3a2b1d, 5.0, 1.05, -3.25);
+      const bookColors = [0x38bdf8, 0xf5c542, 0x34d399, 0x818cf8, 0xfb923c, 0xf472b6];
+      const tierCenters = [0.06 + 0.335, 0.73 + 0.335, 1.4 + 0.28]; // sit just above each board
+      tierCenters.forEach((ty, t) => {
+        const count = t === 2 ? 4 : 5;
+        for (let i = 0; i < count; i++) {
+          const c = bookColors[(i + t * 2) % bookColors.length];
+          const h = 0.34 + ((i + t) % 3) * 0.05;
+          addBox(0.075, h, 0.3, c, shelfX - 0.42 + i * 0.165, (shelfBoardYs[t] + 0.03) + h / 2, -3.0);
+        }
+      });
+      // A couple of books lying flat + a small trinket on the top tier
+      addBox(0.3, 0.05, 0.22, 0xf472b6, shelfX + 0.28, 1.56, -2.95);
+      addBox(0.26, 0.05, 0.2, 0xf5c542, shelfX + 0.28, 1.62, -2.93);
+      const trinket = new THREE.Mesh(new THREE.SphereGeometry(0.06, 12, 12), new THREE.MeshStandardMaterial({ color: 0x34d399, roughness: 0.5 }));
+      trinket.position.set(shelfX + 0.3, 2.07, -2.95);
+      trinket.castShadow = true;
+      scene.add(trinket);
+      addAO(4.0, -2.9, 0.68, 0.52);
+
+      // Door (right wall)
+      addBox(0.1, 2.1, 0.75, 0x3a2b1d, ROOM_X - 0.05, 1.05, 1.0);
       const knob = new THREE.Mesh(new THREE.SphereGeometry(0.04, 10, 10), new THREE.MeshStandardMaterial({ color: 0xf5c542, metalness: 0.6 }));
-      knob.position.set(4.7, 1.0, -3.15);
+      knob.position.set(ROOM_X - 0.12, 1.0, 0.7);
       scene.add(knob);
 
       // Arcade cabinet
-      addBox(0.7, 1.5, 0.5, 0x2b3650, 3.2, 0.75, 1.3);
-      addBox(0.5, 0.35, 0.05, 0x0b1324, 3.2, 1.25, 1.06);
-      const arcadeScreen = addBox(0.44, 0.3, 0.02, 0x38bdf8, 3.2, 1.25, 1.04);
+      addBox(0.7, 1.5, 0.5, 0x2b3650, 3.8, 0.75, 1.8);
+      addBox(0.5, 0.35, 0.05, 0x0b1324, 3.8, 1.25, 1.56);
+      const arcadeScreen = addBox(0.44, 0.3, 0.02, 0x38bdf8, 3.8, 1.25, 1.54);
       arcadeScreen.material = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
+      addGlow(3.8, 1.25, 1.6, 0.6, 0x5fc9ff, 0.55);
+      addBox(0.1, 0.06, 0.1, 0xf5c542, 3.65, 0.95, 1.95, { metalness: 0.5 });
+      addAO(3.8, 1.7, 0.46, 0.38);
 
       // Plant
       const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.17, 0.3, 14), new THREE.MeshStandardMaterial({ color: 0x92400e }));
-      pot.position.set(-4.6, 0.15, 1.5);
+      pot.position.set(-4.8, 0.15, 2.0);
+      pot.castShadow = true; pot.receiveShadow = true;
       scene.add(pot);
       const leaves = new THREE.Mesh(new THREE.IcosahedronGeometry(0.32, 0), new THREE.MeshStandardMaterial({ color: 0x22c55e, flatShading: true }));
-      leaves.position.set(-4.6, 0.55, 1.5);
+      leaves.position.set(-4.8, 0.55, 2.0);
+      leaves.castShadow = true;
       scene.add(leaves);
+      addAO(-4.8, 2.0, 0.38, 0.34);
 
-      // Character
+      // Character — sphere head, hair cap, face, shoes
       const char = new THREE.Group();
-      const skin = 0x8a5434, shirt = 0x38bdf8, pants = 0x1e293b, hair = 0x141010;
-      const legL = addMember(0.16, 0.6, 0.18, pants, -0.1, 0.3, 0);
-      const legR = addMember(0.16, 0.6, 0.18, pants, 0.1, 0.3, 0);
-      const torso = addMember(0.42, 0.5, 0.26, shirt, 0, 0.85, 0);
-      const armL = addMember(0.14, 0.42, 0.16, skin, -0.3, 0.82, 0);
-      const armR = addMember(0.14, 0.42, 0.16, skin, 0.3, 0.82, 0);
-      const head = addMember(0.32, 0.32, 0.3, skin, 0, 1.28, 0);
-      addMember(0.33, 0.14, 0.32, hair, 0, 1.46, 0);
-      function addMember(w, h, d, color, x, y, z) {
-        const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshStandardMaterial({ color, roughness: 0.7 }));
+      const skin = 0x9c6a42, shirt = 0x2f9eff, pants = 0x24304a, hairColor = 0x2a1810, shoe = 0x1a1a1a;
+      function addMember(geo, color, x, y, z, opts) {
+        const mat = new THREE.MeshStandardMaterial({ color, roughness: (opts && opts.roughness) ?? 0.6, metalness: (opts && opts.metalness) ?? 0 });
+        // A touch of self-illumination so the face/skin never goes fully dark, whatever the camera/light angle
+        if (opts && opts.selfLit) { mat.emissive = new THREE.Color(color); mat.emissiveIntensity = 0.22; }
+        const m = new THREE.Mesh(geo, mat);
         m.position.set(x, y, z);
+        m.castShadow = true;
         char.add(m);
         return m;
       }
-      char.position.set(0, 0, 1.6);
+      // Chibi proportions: big head, short body — reads clearly at this camera distance
+      const legL = addMember(new THREE.BoxGeometry(0.17, 0.42, 0.19), pants, -0.11, 0.23, 0);
+      const legR = addMember(new THREE.BoxGeometry(0.17, 0.42, 0.19), pants, 0.11, 0.23, 0);
+      addMember(new THREE.BoxGeometry(0.19, 0.1, 0.24), shoe, -0.11, 0.05, 0.02);
+      addMember(new THREE.BoxGeometry(0.19, 0.1, 0.24), shoe, 0.11, 0.05, 0.02);
+      addMember(new THREE.BoxGeometry(0.46, 0.4, 0.28), shirt, 0, 0.64, 0);
+      const armL = addMember(new THREE.BoxGeometry(0.15, 0.36, 0.17), skin, -0.32, 0.63, 0, { selfLit: true });
+      const armR = addMember(new THREE.BoxGeometry(0.15, 0.36, 0.17), skin, 0.32, 0.63, 0, { selfLit: true });
+      const head = addMember(new THREE.SphereGeometry(0.27, 20, 20), skin, 0, 1.1, 0, { selfLit: true });
+      // Hair cap stays above the equator so the whole face stays visible from the follow-cam's downward angle
+      addMember(new THREE.SphereGeometry(0.29, 20, 20, 0, Math.PI * 2, 0, Math.PI * 0.4), hairColor, 0, 1.14, 0);
+      addMember(new THREE.SphereGeometry(0.032, 8, 8), 0x141010, -0.1, 1.17, 0.23);
+      addMember(new THREE.SphereGeometry(0.032, 8, 8), 0x141010, 0.1, 1.17, 0.23);
+      addMember(new THREE.BoxGeometry(0.11, 0.025, 0.02), 0x3a1f16, 0, 1.06, 0.26);
+      char.position.set(0, 0, 2.0);
       scene.add(char);
+      // No fake-AO blob here: the character already casts a real shadow from keyLight
 
-      const camTarget = new THREE.Vector3(0, 0.8, 1.6);
+      const camTarget = new THREE.Vector3(0, 0.8, 2.0);
       camera.position.set(0, 6.2, 7.2);
       camera.lookAt(camTarget);
 
@@ -2080,8 +2223,8 @@
 
         camTarget.x += (char.position.x - camTarget.x) * 0.12;
         camTarget.z += (char.position.z - camTarget.z) * 0.12;
-        camera.position.set(camTarget.x, 6.2, camTarget.z + 5.6);
-        camera.lookAt(camTarget.x, 0.9, camTarget.z - 1.4);
+        camera.position.set(camTarget.x, 4.7, camTarget.z + 4.1);
+        camera.lookAt(camTarget.x, 1.0, camTarget.z - 0.7);
 
         let nearest = null, nearestDist = Infinity;
         for (const hs of HOTSPOTS) {
