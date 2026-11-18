@@ -1874,6 +1874,21 @@
         { key: 'rest',         x: -4.0, z: -1.0, r: 1.7,  label: '🛏️ Downtime' }
       ];
       const ROOM_X = 5.6, ROOM_Z_BACK = -3.3, ROOM_Z_FRONT = 3.9;
+      // Furniture footprints the character can't walk through (half-width/half-depth, room coords)
+      const OBSTACLES = [
+        { x: -4.0, z: -1.85, hw: 1.32, hd: 1.18 }, // bed
+        { x: -2.1, z: -2.3,  hw: 0.3,  hd: 0.26 }, // nightstand
+        { x: 1.1,  z: -2.65, hw: 1.2,  hd: 0.4 },  // desk
+        { x: 4.0,  z: -3.05, hw: 0.6,  hd: 0.26 }, // bookshelf
+        { x: 3.8,  z: 1.8,   hw: 0.4,  hd: 0.3 }   // arcade cabinet
+      ];
+      const CHAR_R = 0.24;
+      function blocked(x, z) {
+        for (const o of OBSTACLES) {
+          if (x > o.x - o.hw - CHAR_R && x < o.x + o.hw + CHAR_R && z > o.z - o.hd - CHAR_R && z < o.z + o.hd + CHAR_R) return true;
+        }
+        return false;
+      }
 
       const scene = new THREE.Scene();
       scene.background = new THREE.Color(0x2a2338);
@@ -2203,8 +2218,11 @@
         if (moving) {
           mx /= len; mz /= len;
           const speed = 3.1;
-          char.position.x = Math.min(ROOM_X - 0.4, Math.max(-ROOM_X + 0.4, char.position.x + mx * speed * dt));
-          char.position.z = Math.min(ROOM_Z_FRONT - 0.3, Math.max(ROOM_Z_BACK + 0.5, char.position.z + mz * speed * dt));
+          const nx = Math.min(ROOM_X - 0.4, Math.max(-ROOM_X + 0.4, char.position.x + mx * speed * dt));
+          const nz = Math.min(ROOM_Z_FRONT - 0.3, Math.max(ROOM_Z_BACK + 0.5, char.position.z + mz * speed * dt));
+          // Move each axis independently so hitting furniture slides you along it instead of stopping dead
+          if (!blocked(nx, char.position.z)) char.position.x = nx;
+          if (!blocked(char.position.x, nz)) char.position.z = nz;
           const targetAngle = Math.atan2(mx, mz);
           let da = targetAngle - char.rotation.y;
           da = Math.atan2(Math.sin(da), Math.cos(da));
