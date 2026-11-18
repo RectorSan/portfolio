@@ -446,25 +446,61 @@
       font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 900; letter-spacing: -.03em;
       margin-bottom: 10px;
     }
-    .room-intro p { color: var(--text-2); font-size: 1rem; max-width: 520px; margin: 0 auto; }
+    .room-intro p { color: var(--text-2); font-size: 1rem; max-width: 560px; margin: 0 auto; }
+    .room-intro kbd {
+      display: inline-block; min-width: 22px; text-align: center; padding: 2px 6px; margin: 0 1px;
+      border-radius: 5px; background: var(--surface-2); border: 1px solid var(--border);
+      font-family: var(--mono); font-size: .78em; color: var(--text);
+    }
+    .room-only-touch { display: none; }
+    @media (hover: none) and (pointer: coarse) {
+      .room-only-desktop { display: none; }
+      .room-only-touch { display: block; }
+    }
     .room-stage-wrap { max-width: 920px; margin: 0 auto; position: relative; }
     .room-stage {
-      width: 100%; height: auto; display: block;
-      border-radius: 20px; overflow: hidden;
+      position: relative; width: 100%; aspect-ratio: 16 / 10;
+      border-radius: 20px; overflow: hidden; background: #141c2b;
       box-shadow: 0 20px 60px rgba(0,0,0,.45), 0 0 0 1px var(--border);
-      cursor: default;
+      touch-action: none;
     }
-    .hotspot { cursor: pointer; transition: transform .25s cubic-bezier(.34,1.56,.64,1); transform-origin: center; }
-    .hotspot:hover, .hotspot:focus-visible { transform: scale(1.045); outline: none; }
-    .hotspot:hover .hs-glow, .hotspot:focus-visible .hs-glow { opacity: 1; }
-    .hotspot:hover .hs-label, .hotspot:focus-visible .hs-label { opacity: 1; transform: translateY(0); }
-    .hs-glow { opacity: 0; transition: opacity .25s; filter: blur(14px); }
-    .hs-label {
-      opacity: 0; transform: translateY(4px); transition: all .2s;
-      font: 700 15px/1 var(--font); fill: #fff; pointer-events: none;
+    #roomCanvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; outline: none; }
+    .room-loading {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      color: var(--text-3); font-size: .9rem; transition: opacity .4s; pointer-events: none;
     }
-    .hs-label-bg { opacity: 0; transition: opacity .2s; fill: rgba(6,10,19,.85); }
-    .hotspot:hover .hs-label-bg, .hotspot:focus-visible .hs-label-bg { opacity: 1; }
+    .room-loading.hidden { opacity: 0; }
+    .room-prompt[hidden] { display: none; }
+    .room-prompt {
+      position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%);
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 18px; border-radius: 999px; z-index: 5;
+      background: rgba(6,10,19,.88); border: 1px solid rgba(56,189,248,.35);
+      color: #fff; font-size: .88rem; font-weight: 600; white-space: nowrap;
+      box-shadow: 0 0 0 0 var(--glow); animation: room-prompt-pulse 1.6s ease-in-out infinite;
+      cursor: pointer;
+    }
+    @keyframes room-prompt-pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(56,189,248,.35); }
+      50% { box-shadow: 0 0 0 8px rgba(56,189,248,0); }
+    }
+    .room-prompt kbd {
+      display: inline-block; padding: 1px 7px; border-radius: 5px; background: rgba(255,255,255,.12);
+      font-family: var(--mono); font-size: .8em;
+    }
+    .room-joystick {
+      display: none; position: absolute; left: 20px; bottom: 20px; z-index: 5;
+      width: 96px; height: 96px; border-radius: 50%;
+      background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.18);
+    }
+    @media (hover: none) and (pointer: coarse) {
+      .room-joystick { display: block; }
+    }
+    .room-joystick-nub {
+      position: absolute; top: 50%; left: 50%; width: 42px; height: 42px; border-radius: 50%;
+      background: rgba(255,255,255,.35); transform: translate(-50%, -50%);
+      transition: transform .08s linear;
+    }
     .room-hint-row {
       display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 20px;
     }
@@ -903,160 +939,18 @@
     <div class="container room-wrap">
       <div class="room-intro reveal visible">
         <h1>Welcome to my room.</h1>
-        <p>Click anything that glows. Some things open a story, some things take you somewhere else entirely.</p>
+        <p class="room-only-desktop">Use <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or the arrow keys to walk around. Get close to something, then press <kbd>E</kbd> or click it.</p>
+        <p class="room-only-touch">Drag the stick to walk around. Get close to something, then tap the prompt.</p>
       </div>
       <div class="room-stage-wrap">
-        <svg class="room-stage" id="roomSvg" viewBox="0 0 960 600" role="group" aria-label="Interactive room">
-          <!-- wall & floor -->
-          <rect x="0" y="0" width="960" height="382" fill="#1f2a3d"/>
-          <rect x="0" y="382" width="960" height="218" fill="#7a5338"/>
-          <g stroke="#6a4830" stroke-width="2" opacity=".6">
-            <line x1="0" y1="430" x2="960" y2="430"/>
-            <line x1="0" y1="478" x2="960" y2="478"/>
-            <line x1="0" y1="526" x2="960" y2="526"/>
-            <line x1="0" y1="574" x2="960" y2="574"/>
-          </g>
-          <ellipse cx="470" cy="500" rx="230" ry="56" fill="#b5542f"/>
-          <ellipse cx="470" cy="500" rx="230" ry="56" fill="none" stroke="#9c4426" stroke-width="4" opacity=".6"/>
-          <ellipse cx="470" cy="500" rx="170" ry="40" fill="none" stroke="#c96a3c" stroke-width="2" opacity=".5"/>
-
-          <!-- window (decorative) -->
-          <rect x="54" y="50" width="168" height="190" rx="6" fill="#0a0f1c" stroke="#141d2e" stroke-width="12"/>
-          <circle cx="90" cy="80" r="1.6" fill="#fff" opacity=".8"/>
-          <circle cx="150" cy="65" r="1.2" fill="#fff" opacity=".6"/>
-          <circle cx="190" cy="95" r="1.6" fill="#fff" opacity=".7"/>
-          <circle cx="120" cy="110" r="1" fill="#fff" opacity=".5"/>
-          <circle cx="170" cy="130" r="1.3" fill="#fff" opacity=".6"/>
-          <path d="M54 220 l20-30 15 12 18-40 14 20 20-25 15 15 12-35 10 50v16H54z" fill="#060a13"/>
-          <line x1="138" y1="50" x2="138" y2="240" stroke="#141d2e" stroke-width="6"/>
-          <line x1="54" y1="145" x2="222" y2="145" stroke="#141d2e" stroke-width="6"/>
-
-          <!-- wall shelf: diploma + trophy (hotspot) -->
-          <g class="hotspot" tabindex="0" role="button" aria-label="Experience and education" data-panel="experience">
-            <ellipse class="hs-glow" cx="650" cy="150" rx="110" ry="80" fill="#38bdf8"/>
-            <rect x="560" y="70" width="86" height="64" rx="3" fill="#2b3650" stroke="#f8fafc" stroke-width="3"/>
-            <rect x="572" y="82" width="62" height="40" fill="#f1f5f9" opacity=".9"/>
-            <line x1="580" y1="92" x2="624" y2="92" stroke="#94a3b8" stroke-width="2"/>
-            <line x1="580" y1="100" x2="618" y2="100" stroke="#94a3b8" stroke-width="2"/>
-            <line x1="580" y1="108" x2="610" y2="108" stroke="#94a3b8" stroke-width="2"/>
-            <rect x="648" y="110" width="110" height="10" rx="3" fill="#4a3625"/>
-            <path d="M685 68c0 16 10 24 10 24s10-8 10-24z" fill="#f5c542"/>
-            <rect d="" x="691" y="92" width="8" height="16" fill="#f5c542"/>
-            <circle cx="695" cy="70" r="16" fill="#f5c542" stroke="#caa02f" stroke-width="2"/>
-            <rect x="686" y="108" width="18" height="6" fill="#caa02f"/>
-            <rect class="hs-label-bg" x="596" y="36" width="108" height="24" rx="6"/>
-            <text class="hs-label" x="650" y="53" text-anchor="middle">🎓 Résumé wall</text>
-          </g>
-
-          <!-- bookshelf (hotspot) -->
-          <g class="hotspot" tabindex="0" role="button" aria-label="Skills" data-panel="skills">
-            <ellipse class="hs-glow" cx="850" cy="300" rx="100" ry="110" fill="#818cf8"/>
-            <rect x="800" y="180" width="110" height="220" rx="4" fill="#2b3650"/>
-            <rect x="808" y="188" width="94" height="4" fill="#1a2336"/>
-            <rect x="808" y="248" width="94" height="4" fill="#1a2336"/>
-            <rect x="808" y="308" width="94" height="4" fill="#1a2336"/>
-            <rect x="808" y="368" width="94" height="4" fill="#1a2336"/>
-            <g>
-              <rect x="812" y="196" width="10" height="50" fill="#38bdf8"/>
-              <rect x="824" y="200" width="10" height="46" fill="#f5c542"/>
-              <rect x="836" y="194" width="10" height="52" fill="#34d399"/>
-              <rect x="848" y="198" width="10" height="48" fill="#818cf8"/>
-              <rect x="860" y="202" width="10" height="44" fill="#fb923c"/>
-              <rect x="872" y="196" width="10" height="50" fill="#f472b6"/>
-              <rect x="812" y="256" width="10" height="50" fill="#34d399"/>
-              <rect x="824" y="260" width="10" height="46" fill="#38bdf8"/>
-              <rect x="836" y="254" width="10" height="52" fill="#fb923c"/>
-              <rect x="848" y="258" width="10" height="48" fill="#f5c542"/>
-              <rect x="860" y="262" width="10" height="44" fill="#f472b6"/>
-              <rect x="872" y="256" width="10" height="50" fill="#818cf8"/>
-            </g>
-            <rect class="hs-label-bg" x="806" y="150" width="92" height="24" rx="6"/>
-            <text class="hs-label" x="852" y="167" text-anchor="middle">📚 Skills</text>
-          </g>
-
-          <!-- door (hotspot → career mode) -->
-          <g class="hotspot" tabindex="0" role="button" aria-label="Walk through the door, into Career Mode" data-mode="career">
-            <ellipse class="hs-glow" cx="930" cy="280" rx="70" ry="130" fill="#b8f34a"/>
-            <rect x="900" y="110" width="60" height="272" fill="#3a2b1d" stroke="#241a11" stroke-width="4"/>
-            <rect x="906" y="118" width="48" height="256" fill="#4a3625"/>
-            <circle cx="944" cy="250" r="4" fill="#f5c542"/>
-            <rect class="hs-label-bg" x="862" y="70" width="136" height="24" rx="6"/>
-            <text class="hs-label" x="930" y="87" text-anchor="middle">🚪 Go pro on the pitch</text>
-          </g>
-
-          <!-- desk -->
-          <rect x="110" y="368" width="270" height="16" rx="3" fill="#4a3625"/>
-          <rect x="122" y="384" width="12" height="80" fill="#3a2b1d"/>
-          <rect x="356" y="384" width="12" height="80" fill="#3a2b1d"/>
-
-          <!-- monitor (hotspot) -->
-          <g class="hotspot" tabindex="0" role="button" aria-label="Projects" data-panel="projects">
-            <ellipse class="hs-glow" cx="190" cy="310" rx="95" ry="95" fill="#38bdf8"/>
-            <rect x="140" y="250" width="100" height="72" rx="6" fill="#111827" stroke="#334155" stroke-width="4"/>
-            <rect x="148" y="258" width="84" height="56" fill="#0b1324"/>
-            <rect x="152" y="264" width="30" height="5" fill="#38bdf8" opacity=".8"/>
-            <rect x="152" y="274" width="50" height="4" fill="#475569"/>
-            <rect x="152" y="282" width="40" height="4" fill="#475569"/>
-            <rect x="152" y="294" width="60" height="10" rx="2" fill="#38bdf8" opacity=".6"/>
-            <rect x="178" y="322" width="24" height="10" fill="#334155"/>
-            <rect x="162" y="332" width="56" height="6" rx="3" fill="#1e293b"/>
-            <rect class="hs-label-bg" x="135" y="214" width="110" height="24" rx="6"/>
-            <text class="hs-label" x="190" y="231" text-anchor="middle">💻 Projects</text>
-          </g>
-
-          <!-- phone (hotspot) -->
-          <g class="hotspot" tabindex="0" role="button" aria-label="Contact" data-panel="contact">
-            <ellipse class="hs-glow" cx="280" cy="350" rx="55" ry="55" fill="#34d399"/>
-            <rect x="262" y="332" width="34" height="18" rx="4" fill="#1e293b" transform="rotate(-10 279 341)"/>
-            <rect x="266" y="336" width="26" height="4" rx="2" fill="#34d399" transform="rotate(-10 279 341)" opacity=".8"/>
-            <rect class="hs-label-bg" x="238" y="300" width="84" height="24" rx="6"/>
-            <text class="hs-label" x="280" y="317" text-anchor="middle">📞 Contact</text>
-          </g>
-
-          <!-- mail tray (hotspot) -->
-          <g class="hotspot" tabindex="0" role="button" aria-label="References" data-panel="references">
-            <ellipse class="hs-glow" cx="340" cy="356" rx="50" ry="45" fill="#fbbf24"/>
-            <rect x="320" y="348" width="42" height="16" rx="2" fill="#92400e"/>
-            <path d="M320 348l21 12 21-12" fill="none" stroke="#fde68a" stroke-width="2"/>
-            <rect x="326" y="338" width="34" height="12" rx="1" fill="#fde68a" transform="rotate(-6 343 344)"/>
-            <rect class="hs-label-bg" x="296" y="300" width="96" height="24" rx="6"/>
-            <text class="hs-label" x="344" y="317" text-anchor="middle">✉️ References</text>
-          </g>
-
-          <!-- photo frame (hotspot) -->
-          <g class="hotspot" tabindex="0" role="button" aria-label="About me" data-panel="about">
-            <ellipse class="hs-glow" cx="130" cy="352" rx="45" ry="45" fill="#f472b6"/>
-            <rect x="114" y="338" width="30" height="34" rx="2" fill="#f8fafc" transform="rotate(8 129 355)"/>
-            <rect x="119" y="343" width="20" height="20" fill="#818cf8" transform="rotate(8 129 355)"/>
-            <rect class="hs-label-bg" x="86" y="300" width="88" height="24" rx="6"/>
-            <text class="hs-label" x="130" y="317" text-anchor="middle">🖼️ About me</text>
-          </g>
-
-          <!-- arcade cabinet (hotspot → pro mode) -->
-          <g class="hotspot" tabindex="0" role="button" aria-label="Open the full resume view" data-mode="pro">
-            <ellipse class="hs-glow" cx="500" cy="340" rx="85" ry="100" fill="#818cf8"/>
-            <rect x="462" y="256" width="76" height="128" rx="6" fill="#2b3650" stroke="#1a2336" stroke-width="4"/>
-            <rect x="470" y="264" width="60" height="42" fill="#0b1324"/>
-            <rect x="476" y="270" width="48" height="4" fill="#38bdf8" opacity=".8"/>
-            <rect x="476" y="280" width="36" height="4" fill="#475569"/>
-            <rect x="476" y="288" width="30" height="4" fill="#818cf8"/>
-            <circle cx="486" cy="326" r="9" fill="#1a2336"/>
-            <circle cx="486" cy="326" r="4" fill="#f5c542"/>
-            <circle cx="510" cy="320" r="6" fill="#ef4444"/>
-            <circle cx="524" cy="320" r="6" fill="#38bdf8"/>
-            <rect class="hs-label-bg" x="446" y="222" width="110" height="24" rx="6"/>
-            <text class="hs-label" x="500" y="239" text-anchor="middle">🕹️ Full resume</text>
-          </g>
-
-          <!-- plant (hotspot → easter egg) -->
-          <g class="hotspot" tabindex="0" role="button" aria-label="A fun fact" data-panel="fun">
-            <ellipse class="hs-glow" cx="60" cy="470" rx="55" ry="60" fill="#34d399"/>
-            <rect x="40" y="462" width="40" height="36" rx="3" fill="#92400e"/>
-            <path d="M60 462c-6-20-26-24-30-14 10 10 20 8 30 14zM60 462c6-24 30-28 34-16-12 10-22 6-34 16zM60 462c-2-28 16-36 20-26-8 12-14 14-20 26z" fill="#22c55e"/>
-            <rect class="hs-label-bg" x="18" y="420" width="84" height="24" rx="6"/>
-            <text class="hs-label" x="60" y="437" text-anchor="middle">🌿 Water me</text>
-          </g>
-        </svg>
+        <div class="room-stage" id="roomStage">
+          <canvas id="roomCanvas"></canvas>
+          <div class="room-loading" id="roomLoading">Loading the room…</div>
+          <button class="room-prompt" id="roomPrompt" hidden></button>
+          <div class="room-joystick" id="roomJoystick" aria-hidden="true">
+            <div class="room-joystick-nub" id="roomJoystickNub"></div>
+          </div>
+        </div>
       </div>
       <div class="room-hint-row reveal visible">
         <span>🎓 Résumé wall → experience</span>
@@ -1617,6 +1511,7 @@
     </div>
   </footer>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
   <script>
     /* ─────────────────────────────────────────
        CAREER MODE DATA — edit freely.
@@ -1939,17 +1834,272 @@
     roomBackdrop.addEventListener('click', closeRoomPanel);
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeRoomPanel(); });
 
-    const roomSvg = $('#roomSvg');
-    if (roomSvg) {
-      roomSvg.querySelectorAll('.hotspot').forEach(hs => {
-        const activate = () => {
-          if (hs.dataset.mode) switchMode(hs.dataset.mode);
-          else if (hs.dataset.panel) openRoomPanel(hs.dataset.panel);
-        };
-        hs.addEventListener('click', activate);
-        hs.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activate(); } });
-      });
+    /* ─────────── 3D room: walkable character ─────────── */
+    function activateHotspot(key) {
+      if (key.startsWith('mode:')) switchMode(key.slice(5));
+      else openRoomPanel(key);
     }
+
+    (function initRoom3D() {
+      const stage = $('#roomStage');
+      const canvas = $('#roomCanvas');
+      const loadingEl = $('#roomLoading');
+      const promptEl = $('#roomPrompt');
+      const joystick = $('#roomJoystick');
+      const joyNub = $('#roomJoystickNub');
+      if (!stage || !canvas) return;
+      if (typeof THREE === 'undefined') {
+        loadingEl.textContent = "Couldn't load the 3D room — try Pro or Career above.";
+        return;
+      }
+
+      const HOTSPOTS = [
+        { key: 'about',        x: -4.3, z: -1.8, r: 1.25, label: '🖼️ About me' },
+        { key: 'projects',     x: -3.0, z: -1.8, r: 1.35, label: '💻 Projects' },
+        { key: 'contact',      x: -2.0, z: -1.8, r: 1.1,  label: '📞 Contact' },
+        { key: 'references',  x: -1.1, z: -1.8, r: 1.1,  label: '✉️ References' },
+        { key: 'experience',   x: 1.0,  z: -2.6, r: 1.6,  label: '🎓 Experience & education' },
+        { key: 'skills',       x: 3.6,  z: -2.5, r: 1.6,  label: '📚 Skills' },
+        { key: 'mode:career',  x: 5.0,  z: -2.6, r: 1.6,  label: '🚪 Walk through to Career Mode' },
+        { key: 'mode:pro',     x: 3.2,  z: 1.3,  r: 1.5,  label: '🕹️ Open the full résumé' },
+        { key: 'fun',          x: -4.6, z: 1.5,  r: 1.1,  label: '🌿 Fun fact' }
+      ];
+      const ROOM_X = 5.4, ROOM_Z_BACK = -3.3, ROOM_Z_FRONT = 3.6;
+
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x141c2b);
+      const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 60);
+      let renderer;
+      try {
+        renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+      } catch (err) {
+        loadingEl.textContent = "Your browser can't run the 3D room — try Pro or Career above.";
+        return;
+      }
+      renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+
+      scene.add(new THREE.HemisphereLight(0x8fa8c9, 0x2a2010, 0.9));
+      const lamp = new THREE.DirectionalLight(0xfff3d6, 0.9);
+      lamp.position.set(4, 6, 3);
+      scene.add(lamp);
+
+      // Floor & rug
+      const floor = new THREE.Mesh(
+        new THREE.PlaneGeometry(ROOM_X * 2, ROOM_Z_FRONT - ROOM_Z_BACK),
+        new THREE.MeshStandardMaterial({ color: 0x7a5338, roughness: 0.95 })
+      );
+      floor.rotation.x = -Math.PI / 2;
+      floor.position.set(0, 0, (ROOM_Z_BACK + ROOM_Z_FRONT) / 2);
+      scene.add(floor);
+      const rug = new THREE.Mesh(
+        new THREE.CircleGeometry(2.1, 40),
+        new THREE.MeshStandardMaterial({ color: 0xb5542f, roughness: 0.9 })
+      );
+      rug.rotation.x = -Math.PI / 2;
+      rug.position.set(0.3, 0.01, -0.6);
+      scene.add(rug);
+
+      // Back wall & window
+      const wall = new THREE.Mesh(
+        new THREE.PlaneGeometry(ROOM_X * 2, 4),
+        new THREE.MeshStandardMaterial({ color: 0x1f2a3d, roughness: 1 })
+      );
+      wall.position.set(0, 2, ROOM_Z_BACK);
+      scene.add(wall);
+      const window1 = new THREE.Mesh(
+        new THREE.PlaneGeometry(1.5, 1.7),
+        new THREE.MeshBasicMaterial({ color: 0x0a1630 })
+      );
+      window1.position.set(-4.2, 2.3, ROOM_Z_BACK + 0.02);
+      scene.add(window1);
+
+      function addBox(w, h, d, color, x, y, z, roughness) {
+        const mesh = new THREE.Mesh(
+          new THREE.BoxGeometry(w, h, d),
+          new THREE.MeshStandardMaterial({ color, roughness: roughness ?? 0.8 })
+        );
+        mesh.position.set(x, y, z);
+        scene.add(mesh);
+        return mesh;
+      }
+
+      // Desk + items
+      addBox(3.9, 0.12, 0.7, 0x4a3625, -2.7, 0.85, -1.9);
+      addBox(0.1, 0.85, 0.1, 0x3a2b1d, -4.5, 0.42, -2.1);
+      addBox(0.1, 0.85, 0.1, 0x3a2b1d, -0.9, 0.42, -2.1);
+      addBox(0.7, 0.55, 0.05, 0x111827, -3.0, 1.2, -1.95);
+      addBox(0.6, 0.45, 0.02, 0x38bdf8, -3.0, 1.2, -1.92).material = new THREE.MeshBasicMaterial({ color: 0x1d6fa5 });
+      addBox(0.1, 0.4, 0.1, 0x334155, -3.0, 0.95, -1.95);
+      addBox(0.22, 0.1, 0.42, 0x1e293b, -2.0, 0.95, -1.88);
+      addBox(0.3, 0.06, 0.22, 0x92400e, -1.1, 0.93, -1.85);
+      addBox(0.22, 0.26, 0.02, 0xf8fafc, -4.3, 1.05, -1.84);
+
+      // Wall shelf: diploma + trophy
+      addBox(1.0, 0.08, 0.3, 0x4a3625, 1.0, 1.65, -3.1);
+      addBox(0.5, 0.4, 0.03, 0xf1f5f9, 1.0, 2.1, -3.2);
+      const trophyCup = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.22, 10), new THREE.MeshStandardMaterial({ color: 0xf5c542, metalness: 0.4, roughness: 0.4 }));
+      trophyCup.position.set(0.7, 1.82, -3.1);
+      scene.add(trophyCup);
+
+      // Bookshelf
+      addBox(1.1, 2.0, 0.4, 0x2b3650, 3.6, 1.0, -2.9);
+      const bookColors = [0x38bdf8, 0xf5c542, 0x34d399, 0x818cf8, 0xfb923c, 0xf472b6];
+      bookColors.forEach((c, i) => addBox(0.08, 0.45, 0.3, c, 3.2 + i * 0.13, 1.75, -2.85));
+
+      // Door
+      addBox(0.7, 2.1, 0.12, 0x3a2b1d, 5.0, 1.05, -3.25);
+      const knob = new THREE.Mesh(new THREE.SphereGeometry(0.04, 10, 10), new THREE.MeshStandardMaterial({ color: 0xf5c542, metalness: 0.6 }));
+      knob.position.set(4.7, 1.0, -3.15);
+      scene.add(knob);
+
+      // Arcade cabinet
+      addBox(0.7, 1.5, 0.5, 0x2b3650, 3.2, 0.75, 1.3);
+      addBox(0.5, 0.35, 0.05, 0x0b1324, 3.2, 1.25, 1.06);
+      const arcadeScreen = addBox(0.44, 0.3, 0.02, 0x38bdf8, 3.2, 1.25, 1.04);
+      arcadeScreen.material = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
+
+      // Plant
+      const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.17, 0.3, 14), new THREE.MeshStandardMaterial({ color: 0x92400e }));
+      pot.position.set(-4.6, 0.15, 1.5);
+      scene.add(pot);
+      const leaves = new THREE.Mesh(new THREE.IcosahedronGeometry(0.32, 0), new THREE.MeshStandardMaterial({ color: 0x22c55e, flatShading: true }));
+      leaves.position.set(-4.6, 0.55, 1.5);
+      scene.add(leaves);
+
+      // Character
+      const char = new THREE.Group();
+      const skin = 0x8a5434, shirt = 0x38bdf8, pants = 0x1e293b, hair = 0x141010;
+      const legL = addMember(0.16, 0.6, 0.18, pants, -0.1, 0.3, 0);
+      const legR = addMember(0.16, 0.6, 0.18, pants, 0.1, 0.3, 0);
+      const torso = addMember(0.42, 0.5, 0.26, shirt, 0, 0.85, 0);
+      const armL = addMember(0.14, 0.42, 0.16, skin, -0.3, 0.82, 0);
+      const armR = addMember(0.14, 0.42, 0.16, skin, 0.3, 0.82, 0);
+      const head = addMember(0.32, 0.32, 0.3, skin, 0, 1.28, 0);
+      addMember(0.33, 0.14, 0.32, hair, 0, 1.46, 0);
+      function addMember(w, h, d, color, x, y, z) {
+        const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshStandardMaterial({ color, roughness: 0.7 }));
+        m.position.set(x, y, z);
+        char.add(m);
+        return m;
+      }
+      char.position.set(0, 0, 1.6);
+      scene.add(char);
+
+      const camTarget = new THREE.Vector3(0, 0.8, 1.6);
+      camera.position.set(0, 6.2, 7.2);
+      camera.lookAt(camTarget);
+
+      function resize() {
+        const w = stage.clientWidth, h = stage.clientHeight;
+        if (!w || !h) return;
+        renderer.setSize(w, h, false);
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+      }
+      resize();
+      new ResizeObserver(resize).observe(stage);
+
+      // Input: keyboard
+      const keys = new Set();
+      const MOVE_KEYS = new Set(['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'e']);
+      window.addEventListener('keydown', e => {
+        if (document.body.classList.contains('pro-mode') || document.body.classList.contains('career-mode')) return;
+        const k = e.key.toLowerCase();
+        if (!MOVE_KEYS.has(k)) return;
+        if (k !== 'e') e.preventDefault();
+        keys.add(k);
+        if (k === 'e' && nearestHotspot) activateHotspot(nearestHotspot.key);
+      });
+      window.addEventListener('keyup', e => keys.delete(e.key.toLowerCase()));
+
+      // Input: touch joystick
+      let joyVec = { x: 0, y: 0 };
+      let joyActive = false, joyId = null, joyOrigin = { x: 0, y: 0 };
+      function joyStart(e) {
+        joyActive = true; joyId = e.pointerId;
+        const r = joystick.getBoundingClientRect();
+        joyOrigin = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+        joystick.setPointerCapture(e.pointerId);
+      }
+      function joyMove(e) {
+        if (!joyActive || e.pointerId !== joyId) return;
+        let dx = e.clientX - joyOrigin.x, dy = e.clientY - joyOrigin.y;
+        const max = 34, dist = Math.min(Math.hypot(dx, dy), max);
+        const ang = Math.atan2(dy, dx);
+        dx = Math.cos(ang) * dist; dy = Math.sin(ang) * dist;
+        joyNub.style.transform = `translate(${dx - 21}px, ${dy - 21}px)`;
+        joyVec = { x: dx / max, y: dy / max };
+      }
+      function joyEnd() {
+        joyActive = false; joyVec = { x: 0, y: 0 };
+        joyNub.style.transform = 'translate(-50%, -50%)';
+      }
+      joystick.addEventListener('pointerdown', joyStart);
+      joystick.addEventListener('pointermove', joyMove);
+      joystick.addEventListener('pointerup', joyEnd);
+      joystick.addEventListener('pointercancel', joyEnd);
+
+      promptEl.addEventListener('click', () => { if (nearestHotspot) activateHotspot(nearestHotspot.key); });
+
+      let nearestHotspot = null;
+      let walkT = 0;
+      const clock = new THREE.Clock();
+
+      function frame() {
+        requestAnimationFrame(frame);
+        const inRoom = !document.body.classList.contains('pro-mode') && !document.body.classList.contains('career-mode');
+        const dt = Math.min(clock.getDelta(), 0.05);
+        if (loadingEl && !loadingEl.classList.contains('hidden')) loadingEl.classList.add('hidden');
+        if (!inRoom) return;
+
+        let mx = (keys.has('d') || keys.has('arrowright') ? 1 : 0) - (keys.has('a') || keys.has('arrowleft') ? 1 : 0);
+        let mz = (keys.has('s') || keys.has('arrowdown') ? 1 : 0) - (keys.has('w') || keys.has('arrowup') ? 1 : 0);
+        if (joyVec.x || joyVec.y) { mx = joyVec.x; mz = joyVec.y; }
+        const len = Math.hypot(mx, mz);
+        const moving = len > 0.08;
+        if (moving) {
+          mx /= len; mz /= len;
+          const speed = 3.1;
+          char.position.x = Math.min(ROOM_X - 0.4, Math.max(-ROOM_X + 0.4, char.position.x + mx * speed * dt));
+          char.position.z = Math.min(ROOM_Z_FRONT - 0.3, Math.max(ROOM_Z_BACK + 0.5, char.position.z + mz * speed * dt));
+          const targetAngle = Math.atan2(mx, mz);
+          let da = targetAngle - char.rotation.y;
+          da = Math.atan2(Math.sin(da), Math.cos(da));
+          char.rotation.y += da * Math.min(1, dt * 10);
+          walkT += dt * 9;
+          legL.rotation.x = Math.sin(walkT) * 0.6;
+          legR.rotation.x = -Math.sin(walkT) * 0.6;
+          armL.rotation.x = -Math.sin(walkT) * 0.5;
+          armR.rotation.x = Math.sin(walkT) * 0.5;
+        } else {
+          legL.rotation.x += (0 - legL.rotation.x) * 0.2;
+          legR.rotation.x += (0 - legR.rotation.x) * 0.2;
+          armL.rotation.x += (0 - armL.rotation.x) * 0.2;
+          armR.rotation.x += (0 - armR.rotation.x) * 0.2;
+        }
+
+        camTarget.x += (char.position.x - camTarget.x) * 0.12;
+        camTarget.z += (char.position.z - camTarget.z) * 0.12;
+        camera.position.set(camTarget.x, 6.2, camTarget.z + 5.6);
+        camera.lookAt(camTarget.x, 0.9, camTarget.z - 1.4);
+
+        let nearest = null, nearestDist = Infinity;
+        for (const hs of HOTSPOTS) {
+          const d = Math.hypot(char.position.x - hs.x, char.position.z - hs.z);
+          if (d < hs.r && d < nearestDist) { nearest = hs; nearestDist = d; }
+        }
+        nearestHotspot = nearest;
+        if (nearest) {
+          promptEl.innerHTML = `${nearest.label} <span style="opacity:.7">· <kbd>E</kbd> or tap</span>`;
+          promptEl.hidden = false;
+        } else {
+          promptEl.hidden = true;
+        }
+
+        renderer.render(scene, camera);
+      }
+      requestAnimationFrame(frame);
+    })();
 
     const params = new URLSearchParams(location.search);
     const fromParam = params.get('mode');
