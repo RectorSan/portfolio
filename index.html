@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Ridwanullah Alhassan Adebayo (Rector) — community manager and life-sim game builder. Shipped Celebrity Games, managed a live crypto community, and builds full-stack, cloud and UX work besides.">
+  <meta name="description" content="Ridwanullah Alhassan Adebayo (Rector) — community manager and life-sim player with ideas to bring. Managed a live crypto community, is prototyping a life-sim game, and does full-stack, cloud and UX work besides.">
   <meta name="author" content="Ridwanullah Alhassan Adebayo">
   <meta property="og:title" content="Ridwanullah Alhassan Adebayo | Community & game design, built to ship">
   <meta property="og:description" content="A community manager who builds the games people live in — plus an interactive 3D room, a football-style Career Mode, and the full-stack/cloud work behind it all.">
@@ -366,6 +366,7 @@
       border: 1px solid var(--border); color: var(--text-2);
     }
     .status--live { color: var(--accent-3); border-color: rgba(52,211,153,.3); background: rgba(52,211,153,.06); }
+    .status--wip { color: #fbbf24; border-color: rgba(251,191,36,.3); background: rgba(251,191,36,.06); }
     .status--nda { color: #fbbf24; border-color: rgba(251,191,36,.3); background: rgba(251,191,36,.06); }
     .status--archived { color: var(--text-3); }
     .project-type {
@@ -1027,6 +1028,7 @@
     }
     .res-badge--live { background: var(--lime); color: #0b1a10; }
     .res-badge--done { background: rgba(111,208,255,.15); color: var(--sky); }
+    .res-badge--wip { background: rgba(251,191,36,.18); color: #fbbf24; }
     .res-badge--nda { background: rgba(245,197,66,.14); color: var(--gold); }
     .res-badge--archived { background: rgba(255,122,102,.12); color: var(--red); }
     .res-comp { font-family: var(--mono); font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; color: var(--chalk-3); }
@@ -1310,10 +1312,10 @@
           Open to community &amp; game design roles
         </div>
         <h1 class="reveal reveal-delay-1">
-          Building the worlds<br><span class="gradient-text">people live in.</span>
+          I love the worlds<br><span class="gradient-text">people live in.</span>
         </h1>
         <p class="hero-desc reveal reveal-delay-2">
-          I'm Rector. I run communities and build the life-sim games they play in. I managed community and user support for a live crypto community, then built my own multiplayer life-simulation game from scratch — and I bring years inside games like Torn City and The Sims, not just engineering, but ideas for what makes a world like that fun.
+          I'm Rector. I run gaming communities and I've spent years inside life-sims and text-based worlds — The Sims, Torn City, BitLife and Web3 games. I managed community and user support for a live crypto community, and I'm prototyping my first life-sim game. What I bring is ideas for what makes a world like that fun, and the community skills to keep people in it.
         </p>
         <div class="hero-actions reveal reveal-delay-3">
           <a class="btn btn-primary" href="#projects">
@@ -1328,8 +1330,8 @@
         </div>
         <div class="hero-stats reveal reveal-delay-4">
           <div>
-            <div class="stat-value">1</div>
-            <div class="stat-label">Life-sim game shipped</div>
+            <div class="stat-value">6+</div>
+            <div class="stat-label">Years running Web3 &amp; gaming communities</div>
           </div>
           <div>
             <div class="stat-value">14mo</div>
@@ -1355,14 +1357,14 @@
             <div class="about-text">
               <p>I've run multiple gaming communities, and tried building a few of my own. I've lived inside Web3-based games, 3D life-simulation games — every version of The Sims, Supernatural, Career and the rest — and text-based games like Torn City and BitLife. I want to bring the ideas that come out of all that time straight into Lagos Life.</p>
               <p>On the community side: I managed Synex Coin, a Minecraft-linked crypto community, for 14 months — moderating, handling player issues, keeping people engaged day to day. I've managed Web3 communities since 2019, and I co-lead the SUNO Tech Community, running workshops for students.</p>
-              <p>On the building side: Celebrity Games is a multiplayer life-simulation game I built from scratch — Node.js, PostgreSQL, WebSockets, live server events, an in-game economy, interactive career paths. I also worked with Wizzwoods, a Web3 game, representing the team at the Web3 Global Conference.</p>
-              <p>I studied Computer Science at Summit University, Offa (2022–2025, Second Class Upper), after Mechatronics Engineering at FUT Minna. Alongside community and game work, I build cloud infrastructure, do UX research, and have shipped applied-AI and Web3 projects.</p>
+              <p>On the game side: I worked with Wizzwoods, a Web3 game, representing the team at the Web3 Global Conference. And I'm prototyping my first life-sim, Celebrity Games — a multiplayer career-and-fame sim where I'm testing my own ideas for economies, live events and career paths. It's early and still a work in progress.</p>
+              <p>I studied Computer Science at Summit University, Offa (2022–2025, Second Class Upper), after Mechatronics Engineering at FUT Minna. Alongside community work, I build cloud infrastructure, do UX research, and have worked on applied-AI and Web3 projects.</p>
             </div>
           </div>
           <div class="card focus-card reveal reveal-delay-2">
             <div class="focus-label">How I work</div>
-            <h3>Play it, then build it</h3>
-            <p>I learn a game's economy and community by actually living inside it — Sims, Torn City, BitLife, Web3 games — then bring that to how I build and moderate.</p>
+            <h3>Play it, then improve it</h3>
+            <p>I learn a game's economy and community by actually living inside it — Sims, Torn City, BitLife, Web3 games — then bring that to how I run communities and shape ideas.</p>
             <div class="discipline-list">
               <div class="discipline"><i>🤝</i><div>Community management<small>Moderation · support · engagement</small></div></div>
               <div class="discipline"><i>🎮</i><div>Game &amp; sim design<small>Life-sim mechanics · player systems</small></div></div>
@@ -1376,7 +1378,7 @@
     </section>
 
     <!-- PROJECTS
-         Each card feeds Career Mode too: data-status = live | done | archived | nda,
+         Each card feeds Career Mode too: data-status = live | wip | done | archived | nda,
          data-cat = space-separated filter keys. -->
     <section class="section" id="projects">
       <div class="container">
@@ -1395,16 +1397,16 @@
           <button class="filter-chip" aria-pressed="false" data-filter="games">Games</button>
         </div>
         <div class="projects-grid" id="projectsGrid">
-          <article class="project-card project-card--featured reveal" data-cat="fullstack games cloud" data-status="live" data-comp="Product League">
-            <div class="project-top"><div class="project-icon">🎭</div><span class="status status--live">Live</span></div>
-            <div class="project-type">Life-Sim · Multiplayer · Node.js</div>
-            <h3>Play Celebrity Games</h3>
-            <p>A multiplayer life-simulation game I built from scratch on Node.js 24, PostgreSQL and WebSockets — live server events, an in-game economy, and interactive career paths, deployed on Netlify and Vercel.</p>
+          <article class="project-card project-card--featured reveal" data-cat="fullstack games cloud" data-status="wip" data-comp="Product League">
+            <div class="project-top"><div class="project-icon">🎭</div><span class="status status--wip">Prototype</span></div>
+            <div class="project-type">Life-Sim prototype · Multiplayer · Node.js</div>
+            <h3>Celebrity Games (prototype)</h3>
+            <p>My first life-sim, still in progress: a multiplayer career-and-fame prototype where I'm trying out my ideas for live events, an in-game economy and career paths, on Node.js, PostgreSQL and WebSockets.</p>
             <div class="project-tags">
               <span class="project-tag">Node.js</span><span class="project-tag">PostgreSQL</span><span class="project-tag">WebSockets</span><span class="project-tag">Docker</span><span class="project-tag">TypeScript</span><span class="project-tag">Vercel</span>
             </div>
             <a class="project-link" href="https://Playcelebritygames-cyan.vercel.app" target="_blank" rel="noreferrer">
-              Play it live
+              Try the prototype
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><path d="M7 7h10v10"/></svg>
             </a>
           </article>
@@ -1551,7 +1553,7 @@
               <div class="timeline-dot"></div>
               <div class="timeline-date">2025 – Present</div>
               <h3>Independent projects · Cloud, full stack &amp; Web3</h3>
-              <p>Building and deploying my own products and infrastructure: a GitOps-managed Kubernetes cluster, a live multiplayer game, a marketplace platform, and Web3 UX work for Solana projects.</p>
+              <p>Building and deploying my own products and infrastructure: a GitOps-managed Kubernetes cluster, an early life-sim game prototype, a marketplace platform, and Web3 UX work for Solana projects.</p>
             </div>
             <div class="timeline-item">
               <div class="timeline-dot"></div>
@@ -1773,7 +1775,7 @@
           <div class="ms">
             <div class="ms-node"></div>
             <div class="ms-season">Now</div>
-            <div class="panel ms-card"><h4>First products go live</h4><p>Celebrity Games and Hermes Hub launch. A GitOps cluster runs in production.</p></div>
+            <div class="panel ms-card"><h4>First products take shape</h4><p>Hermes Hub launches, a GitOps cluster runs in production, and a first life-sim prototype, Celebrity Games, is in the works.</p></div>
           </div>
           <div class="ms ms--next">
             <div class="ms-node"></div>
@@ -1789,7 +1791,7 @@
         <div class="trophies">
           <div class="panel trophy reveal"><div class="trophy-ico">🎓</div><div><h4>Graduation day</h4><div class="stat">2:1</div><p>BSc Computer Science, Summit University, 2025.</p></div></div>
           <div class="panel trophy reveal reveal-delay-1"><div class="trophy-ico">☸️</div><div><h4>Cluster commander</h4><div class="stat">Multi-node</div><p>Kubernetes cluster run with Terraform, Ansible and Argo CD.</p></div></div>
-          <div class="panel trophy reveal reveal-delay-2"><div class="trophy-ico">🚀</div><div><h4>Ship it</h4><div class="stat">Live</div><p>Celebrity Games, a multiplayer sim, deployed and playable.</p></div></div>
+          <div class="panel trophy reveal reveal-delay-2"><div class="trophy-ico">🧪</div><div><h4>First prototype</h4><div class="stat">In progress</div><p>Celebrity Games, an early multiplayer life-sim prototype.</p></div></div>
           <div class="panel trophy reveal"><div class="trophy-ico">🏪</div><div><h4>Marketplace maker</h4><div class="stat">Launched</div><p>Hermes Hub connects buyers with vetted artisans.</p></div></div>
           <div class="panel trophy reveal reveal-delay-1"><div class="trophy-ico">🎯</div><div><h4>Sharp shooter</h4><div class="stat">87.45%</div><p>Test accuracy for the crop-disease CNN.</p></div></div>
           <div class="panel trophy reveal reveal-delay-2"><div class="trophy-ico">🛰️</div><div><h4>Eye in the sky</h4><div class="stat">4,000+</div><p>UAV images annotated for PTDF leak-detection research.</p></div></div>
@@ -1882,7 +1884,7 @@
     const RADAR = { Cloud: 15, Backend: 14, Frontend: 13, Research: 14, Web3: 14, Design: 15 };
     const TICKER = [
       '<b>TRANSFER NEWS:</b> Rector is a free agent and taking offers from cloud, full-stack, AI and Web3 clubs',
-      '<b>FT:</b> Celebrity Games goes live and players are joining',
+      '<b>YOUTH ACADEMY:</b> a first life-sim prototype, Celebrity Games, is in development',
       '<b>SCOUTING:</b> 87.45% accuracy on crop-disease classification',
       '<b>TRAINING:</b> a multi-node k3s cluster now deploys itself through Argo CD',
       '<b>COMMUNITY:</b> SUNO Tech workshops continue under co-lead Rector',
@@ -1893,6 +1895,7 @@
     ];
     const RESULT_LABEL = {
       live:     { badge: 'FT', text: 'Full time · Live' },
+      wip:      { badge: "45'", text: 'In play · Prototype' },
       done:     { badge: 'FT', text: 'Full time · Complete' },
       archived: { badge: 'ABD', text: 'Match abandoned' },
       nda:      { badge: 'BCD', text: 'Behind closed doors (NDA)' }
@@ -2135,15 +2138,15 @@
         html: `<div class="rp-body">
           <p>I'm <strong>Ridwanullah Alhassan Adebayo</strong> — "Rector." I started out in Mechatronics Engineering at the Federal University of Technology, Minna, learned Solidity, and managed Web3 communities. In 2022 I moved into Computer Science at Summit University, Offa.</p>
           <p>Since then I've worked across cloud infrastructure, full-stack products, applied AI research, Web3 and UX design — and run community management and support for a live crypto community.</p>
-          <p>I learn best by building the whole thing, and by understanding a community from the inside.</p>
+          <p>I learn best by getting my hands on the whole thing, and by understanding a community from the inside.</p>
         </div>`
       },
       projects: {
         title: '💻 Projects',
         html: `<div class="rp-body">
-          <p><strong>Celebrity Games</strong> — a multiplayer life-simulation game I built on Node.js, PostgreSQL and WebSockets, with live server events and interactive career paths.</p>
+          <p><strong>Celebrity Games (prototype)</strong> — my first life-sim, still in progress: a multiplayer career-and-fame prototype where I'm trying out ideas for live events and career paths.</p>
           <div class="rp-chip-row"><span class="rp-chip">Node.js</span><span class="rp-chip">PostgreSQL</span><span class="rp-chip">WebSockets</span><span class="rp-chip">Docker</span></div>
-          <a class="rp-link" href="https://Playcelebritygames-cyan.vercel.app" target="_blank" rel="noreferrer">Play it live ↗</a>
+          <a class="rp-link" href="https://Playcelebritygames-cyan.vercel.app" target="_blank" rel="noreferrer">Try the prototype ↗</a>
           <p style="margin-top:18px"><strong>Hermes Hub</strong> — an on-demand marketplace connecting buyers with vetted artisans.</p>
           <p><strong>Multi-Node K8s GitOps Infrastructure</strong> — a Kubernetes cluster automated with Terraform, Ansible and Argo CD.</p>
           <p><strong>Crop Disease Detection</strong> — a CNN image classifier, 87.45% test accuracy.</p>
@@ -2201,8 +2204,8 @@
       rest: {
         title: '🛏️ Downtime',
         html: `<div class="rp-body">
-          <p>When I'm not building, I'm usually still inside a simulation of some kind — just playing instead of shipping one.</p>
-          <p>That back-and-forth is basically my whole pitch: I know what makes these games fun from the inside, and I know how to build the thing that runs them.</p>
+          <p>When I'm not working, I'm usually still inside a simulation of some kind — The Sims, Torn City, BitLife.</p>
+          <p>That's basically my whole pitch: I know what makes these games fun from the inside, and I know how to keep the people playing them happy.</p>
         </div>`
       }
     };
