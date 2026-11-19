@@ -627,7 +627,17 @@
     }
     .shoot-scenario.show { animation: shoot-scen 2.6s ease-out forwards; }
     @keyframes shoot-scen { 0% { opacity: 0; transform: translate(-50%, -8px); } 10%, 80% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: .55; } }
-    .shoot-streak { position: absolute; top: 104px; left: 50%; transform: translateX(-50%); z-index: 2; padding: 4px 10px; border-radius: 999px; background: linear-gradient(135deg,#f59e0b,#ef4444); color: #fff; font-weight: 800; font-size: .8rem; }
+    /* 2-second window for the quick-shot bonus: a small tag with a bar that drains */
+    .shoot-quick {
+      position: absolute; left: 50%; top: 104px; transform: translateX(-50%); z-index: 2; pointer-events: none;
+      display: grid; gap: 4px; justify-items: center; opacity: 0; transition: opacity .25s;
+    }
+    .shoot-quick span { font-size: .72rem; font-weight: 800; color: #fde68a; letter-spacing: .03em; text-shadow: 0 1px 6px rgba(0,0,0,.6); }
+    .shoot-quick b { display: block; width: 120px; height: 4px; border-radius: 4px; background: linear-gradient(90deg, #fbbf24, #f97316); transform-origin: left; }
+    .shoot-quick.on { opacity: 1; }
+    .shoot-quick.on b { animation: quick-drain 2s linear forwards; }
+    @keyframes quick-drain { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+    .shoot-streak { position: absolute; top: 136px; left: 50%; transform: translateX(-50%); z-index: 2; padding: 4px 10px; border-radius: 999px; background: linear-gradient(135deg,#f59e0b,#ef4444); color: #fff; font-weight: 800; font-size: .8rem; }
     .shoot-streak[hidden] { display: none; }
     .shoot-toast {
       position: absolute; left: 50%; top: 30%; transform: translate(-50%, -50%); z-index: 2; pointer-events: none; text-align: center;
@@ -715,6 +725,25 @@
       color: var(--text-3); font-size: .9rem; transition: opacity .4s; pointer-events: none;
     }
     .room-loading.hidden { opacity: 0; }
+    /* Small floating tag over the ball, hinting there's a game there */
+    .room-ball-cta {
+      position: absolute; left: 0; top: 0; z-index: 3; pointer-events: auto; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 5px; padding: 4px 9px 4px 7px; border-radius: 999px;
+      background: rgba(10,14,24,.5); border: 1px solid rgba(255,255,255,.16); color: rgba(255,255,255,.85);
+      font-size: .7rem; font-weight: 700; letter-spacing: .02em; white-space: nowrap;
+      backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+      transition: opacity .35s, background .2s; will-change: transform;
+    }
+    .room-ball-cta::after {
+      content: ''; position: absolute; left: 50%; bottom: -5px; width: 8px; height: 8px; margin-left: -4px;
+      background: inherit; border-right: 1px solid rgba(255,255,255,.16); border-bottom: 1px solid rgba(255,255,255,.16);
+      transform: rotate(45deg); backdrop-filter: none;
+    }
+    .room-ball-cta i { font-style: normal; display: inline-block; animation: cta-spin 3.2s ease-in-out infinite; }
+    .room-ball-cta:hover { background: rgba(56,189,248,.3); color: #fff; }
+    .room-ball-cta.off { opacity: 0; pointer-events: none; }
+    @keyframes cta-spin { 0%, 70%, 100% { transform: rotate(0); } 85% { transform: rotate(200deg); } }
+    @media (prefers-reduced-motion: reduce) { .room-ball-cta i { animation: none; } }
     .room-prompt[hidden] { display: none; }
     .room-prompt {
       position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%);
@@ -1186,6 +1215,7 @@
       <canvas id="roomCanvas" aria-label="Rector's room: a small 3D bedroom you can walk around"></canvas>
       <div class="room-loading" id="roomLoading">Loading the room…</div>
       <button class="room-prompt" id="roomPrompt" hidden></button>
+      <button class="room-ball-cta off" id="roomBallCta" type="button" aria-label="Play the shooting challenge"><i aria-hidden="true">⚽</i>Shootout</button>
 
       <div class="room-hud room-hud--left">
         <span class="room-brand">Rector<span class="logo-dot"></span></span>
@@ -1249,6 +1279,7 @@
           <button class="room-hud-btn" id="shootQuit" type="button" title="Back to the room" aria-label="Quit and go back to the room">×</button>
         </div>
         <div class="shoot-scenario" id="shootScenario" aria-live="polite"></div>
+        <div class="shoot-quick" id="shootQuick" aria-hidden="true"><span>⚡ Quick shot +50</span><b></b></div>
         <div class="shoot-streak" id="shootStreak" hidden></div>
         <div class="shoot-toast" id="shootToast" aria-live="assertive"></div>
         <div class="shoot-hint" id="shootHint">Swipe up from the ball · where you let go is where it goes · bend the swipe to curl it</div>
@@ -2545,7 +2576,9 @@
       const K = { x: 0, z: 0.5, base: 0, tx: 0, ty: 1, ang: 0, angT: 0, rate: 3, react: 0.3, shuffle: 2.4, holding: false, armsFwd: 0 };
       let netKick = 0;
       const camPos = new THREE.Vector3(), camLook = new THREE.Vector3();
-      const scenEl = $('#shootScenario');
+      const scenEl = $('#shootScenario'), quickEl = $('#shootQuick');
+      const QUICK_WINDOW = 2;
+      let aimClock = 0;
       const ring = new THREE.Mesh(new THREE.TorusGeometry(0.45, 0.045, 12, 48), new THREE.MeshBasicMaterial({ color: new THREE.Color(0xfbbf24).multiplyScalar(1.6), toneMapped: false }));
       ring.visible = false; scene.add(ring);
 
@@ -2619,6 +2652,8 @@
         }
         ball.position.copy(B); ball.rotation.set(Math.random() * 6, Math.random() * 6, 0);
         vel.set(0, 0, 0); curveOn = false; resolved = false; bounced = false; flightT = 0; resultT = 0; aimT = 0; shotInfo = null;
+        // Quick-shot window: shoot (and score) within 2 seconds of the scene starting
+        aimClock = 0; quickEl.classList.remove('on'); void quickEl.offsetWidth; quickEl.classList.add('on');
         // Keeper gets a little sharper as you score, but always stays beatable
         K.base = scen.id === 'keeperout' ? (Math.random() < 0.5 ? -1 : 1) * rand(2.0, 2.6) : Math.max(-0.8, Math.min(0.8, B.x * 0.06));
         K.x = K.tx = K.base; K.ty = 1; K.ang = K.angT = 0; K.holding = false; K.armsFwd = 0;
@@ -2680,7 +2715,8 @@
         // Path bulges sideways by `disp` mid-flight and bends back onto the target
         vel.addScaledVector(latDir, 4 * disp / t);
         latAcc = -8 * disp / (t * t); curveOn = disp !== 0;
-        shotInfo = { curl: Math.abs(disp) > 1.1, bull: false };
+        shotInfo = { curl: Math.abs(disp) > 1.1, bull: false, quick: aimClock <= QUICK_WINDOW };
+        quickEl.classList.remove('on');
         // Keeper reads the shot, imperfectly; on penalties he sometimes just guesses the wrong way
         const cross = predictCross();
         const err = Math.max(0.3, 0.95 - level * 0.06);
@@ -2712,6 +2748,7 @@
           const bonus = { freekick: ['Beat the wall', 25], long: ['Screamer', 50], angle: ['Tight angle', 50], pressure: ['Under pressure', 25], crowded: ['Through the crowd', 25] }[scen.id];
           if (bonus) { pts += bonus[1]; tags.push(`${bonus[0]} +${bonus[1]}`); }
           if (shotInfo && shotInfo.bull) { pts += 100; tags.push('Bullseye +100'); }
+          if (shotInfo && shotInfo.quick) { pts += 50; tags.push('Quick shot +50'); }
           streak++; goals++; level++;
           if (streak > 1) { const sb = Math.min(4, streak - 1) * 25; pts += sb; tags.push(`Streak +${sb}`); }
           score += pts; scoreEl.textContent = score.toLocaleString();
@@ -2904,6 +2941,8 @@
           timeEl.textContent = fmtTime(timeLeft);
           timeEl.classList.toggle('low', timeLeft <= 10);
         }
+        if (state === 'aim') { aimClock += dt; if (aimClock > QUICK_WINDOW) quickEl.classList.remove('on'); }
+        else if (state !== 'flight') quickEl.classList.remove('on');
         if (state === 'flight') {
           for (let i = 0; i < 4; i++) physics(dt / 4);
           if (resolved) {
@@ -2949,7 +2988,7 @@
         state = 'menu'; card.hidden = false; card.textContent = '';
         card.innerHTML = `<div style="font-size:2.2rem">⚽</div><h2>60-second shooting challenge</h2>
           <p>Swipe up from the ball to shoot. Where your swipe ends is where it goes; bend the swipe to curl it round defenders. Quick flicks are harder to save. Free kicks, penalties, long shots, tight angles, target practice and more, all against the clock.</p>
-          <div class="shoot-rules"><span>Goal 100</span><span>Top bins +50</span><span>Bullseye +100</span><span>Screamer +50</span><span>Curler +25</span><span>Streaks stack</span></div>`;
+          <div class="shoot-rules"><span>Goal 100</span><span>Top bins +50</span><span>Bullseye +100</span><span>Screamer +50</span><span>Quick shot (under 2s) +50</span><span>Curler +25</span><span>Streaks stack</span></div>`;
         const lb = document.createElement('div'); lb.className = 'shoot-lb'; lb.innerHTML = '<div class="shoot-lb-head"><span>Loading scores…</span></div>';
         const actions = document.createElement('div'); actions.className = 'shoot-actions';
         actions.append(btn('Back to room', '', close), btn('Kick off ⚽', 'go', startGame));
@@ -3057,24 +3096,31 @@
         { key: 'rest',         x: -4.0, z: -0.4, r: 1.4,  label: '🛏️ Downtime' },
         { key: 'about',        x: -2.0, z: -1.6, r: 1.0,  label: '🖼️ About me' },
         { key: 'experience',   x: -0.4, z: -2.4, r: 1.2,  label: '🎓 Experience & education' },
-        { key: 'projects',     x: 1.6,  z: -2.1, r: 1.3,  label: '💻 Projects' },
+        { key: 'projects',     x: -4.4, z: 2.0,  r: 1.2,  label: '💻 Projects' },
         { key: 'skills',       x: 3.4,  z: -2.3, r: 1.2,  label: '📚 Skills' },
         { key: 'mode:career',  x: 5.0,  z: -2.3, r: 1.1,  label: '🚪 The door' },
         { key: 'contact',      x: 4.8,  z: -0.3, r: 1.1,  label: '📞 Call me' },
-        { key: 'mode:pro',     x: 3.2,  z: 1.6,  r: 1.2,  label: '🕹️ Play the arcade' },
-        { key: 'references',   x: -2.2, z: 1.9,  r: 1.0,  label: '📰 Read the paper' },
-        { key: 'fun',          x: -4.8, z: 2.5,  r: 1.0,  label: '🌿 Fun fact' }
+        { key: 'mode:pro',     x: 4.55, z: 2.6,  r: 1.2,  label: '🕹️ Play the arcade' },
+        { key: 'references',   x: -2.4, z: 4.3,  r: 1.0,  label: '📰 Read the paper' },
+        { key: 'fun',          x: 4.9,  z: 4.9,  r: 1.0,  label: '🌿 Fun fact' }
       ];
+      // Where the movable furniture lives (built at its original spot, then moved here as a group)
+      const LAYOUT = {
+        desk:   { from: [1.6, -2.65], to: [-5.2, 1.8], rotY: Math.PI / 2 },   // against the left wall, facing into the room
+        arcade: { from: [3.2, 1.0],   to: [5.27, 2.6], rotY: -Math.PI / 2 },  // against the right wall
+        paper:  { from: [-2.2, 1.9],  to: [-2.4, 4.3], rotY: 0.4 },           // front-left, by the cut-away wall
+        plant:  { from: [-4.8, 2.5],  to: [4.9, 4.9],  rotY: 0 }              // front-right corner
+      };
       const ROOM_X = 5.6, ROOM_Z_BACK = -3.3, ROOM_Z_FRONT = 5.6, FLOOR_FRONT = ROOM_Z_FRONT + 8;
       // Furniture footprints the character can't walk through (half-width/half-depth, room coords)
       const OBSTACLES = [
         { x: -4.0, z: -1.85, hw: 1.32, hd: 1.18 }, // bed
         { x: -2.1, z: -2.3,  hw: 0.3,  hd: 0.26 }, // nightstand
-        { x: 1.6,  z: -2.65, hw: 1.15, hd: 0.4 },  // desk
-        { x: 2.55, z: -1.85, hw: 0.28, hd: 0.28 }, // desk chair
+        { x: -5.2, z: 1.8,   hw: 0.4,  hd: 1.15 }, // desk (left wall)
+        { x: -4.4, z: 0.85,  hw: 0.28, hd: 0.28 }, // desk chair
         { x: 3.4,  z: -3.05, hw: 0.6,  hd: 0.26 }, // bookshelf
-        { x: 3.2,  z: 1.1,   hw: 0.4,  hd: 0.4 },  // arcade cabinet (incl. its front control panel)
-        { x: -4.8, z: 2.5,   hw: 0.3,  hd: 0.3 }   // plant pot
+        { x: 5.17, z: 2.6,   hw: 0.4,  hd: 0.4 },  // arcade cabinet (right wall, incl. its control panel)
+        { x: 4.9,  z: 4.9,   hw: 0.3,  hd: 0.3 }   // plant pot
       ];
       const CHAR_R = 0.24;
       function blocked(x, z) {
@@ -3124,7 +3170,7 @@
       const lampLight = new THREE.PointLight(0xffc27a, 2.2, 7, 2);
       scene.add(lampLight);
       const monitorGlow = new THREE.PointLight(0x7fd4ff, 0.9, 4, 2);
-      monitorGlow.position.set(1.6, 1.2, -2.45);
+      monitorGlow.position.set(-5.0, 1.2, 1.8); // in front of the monitor on the left-wall desk
       scene.add(monitorGlow);
 
       // ── Geometry + material helpers ──
@@ -3221,7 +3267,7 @@
       });
       const rug = new THREE.Mesh(new THREE.CircleGeometry(1.95, 64), new THREE.MeshStandardMaterial({ map: rugTex, roughness: 0.95 }));
       rug.rotation.x = -Math.PI / 2;
-      rug.position.set(-0.6, 0.008, -0.5);
+      rug.position.set(0, 0.008, 1.5); // middle of the floor
       rug.receiveShadow = true;
       scene.add(rug);
 
@@ -3344,7 +3390,21 @@
       addBox(0.06, 0.2, 0.15, 0x38bdf8, shelfWX - 0.3, 1.78, -3.15, { radius: 0.01 });
       addBox(0.06, 0.18, 0.15, 0xf472b6, shelfWX - 0.23, 1.77, -3.15, { radius: 0.01 });
 
+      // Build a piece of furniture at its original coordinates, then lift it into a group and move/turn it into place
+      let grabbing = null;
+      const realAdd = scene.add.bind(scene);
+      function startMove() { grabbing = new THREE.Group(); scene.add = (...objs) => { objs.forEach(o => grabbing.add(o)); return scene; }; }
+      function finishMove({ from, to, rotY }) {
+        scene.add = realAdd;
+        const g = grabbing; grabbing = null;
+        g.children.forEach(o => { o.position.x -= from[0]; o.position.z -= from[1]; });
+        g.position.set(to[0], 0, to[1]); g.rotation.y = rotY;
+        scene.add(g);
+        return g;
+      }
+
       // ── Desk, chair, monitor (projects) ──
+      startMove();
       const deskX = 1.6;
       addBox(2.2, 0.07, 0.7, 0x7a5436, deskX, 0.86, -2.65, { radius: 0.025, roughness: 0.55 });
       [[-1.02, -2.93], [1.02, -2.93], [-1.02, -2.37], [1.02, -2.37]].forEach(([dx, dz]) =>
@@ -3381,6 +3441,7 @@
       chairBase.position.y = 0.03; chairBase.castShadow = true; chair.add(chairBase);
       chair.position.set(2.55, 0, -1.85); chair.rotation.y = -0.6; scene.add(chair);
       addAO(deskX, -2.6, 1.15, 0.85);
+      finishMove(LAYOUT.desk);
 
       // ── Bookshelf (skills) ──
       const shelfX = 3.4, shelfWood = 0x6b4a30;
@@ -3407,7 +3468,9 @@
       addAO(shelfX, -2.9, 0.68, 0.52);
 
       // ── Wall clock above the bookshelf ──
-      const clockTex = canvasTex(256, 256, (ctx, w, h) => {
+      // Shows the visitor's real local time; redrawn once a second from the render loop (see tickClock)
+      function drawClock(ctx, w, h, now) {
+        ctx.clearRect(0, 0, w, h);
         ctx.fillStyle = '#fbf7ee'; ctx.beginPath(); ctx.arc(w / 2, h / 2, 124, 0, Math.PI * 2); ctx.fill();
         ctx.fillStyle = '#1f2937';
         for (let i = 0; i < 12; i++) {
@@ -3415,9 +3478,20 @@
           ctx.save(); ctx.translate(w / 2, h / 2); ctx.rotate(a); ctx.fillRect(-(big ? 4 : 2), -112, big ? 8 : 4, big ? 22 : 12); ctx.restore();
         }
         const hand = (a, len, wd, col) => { ctx.save(); ctx.translate(w / 2, h / 2); ctx.rotate(a); ctx.fillStyle = col; ctx.fillRect(-wd / 2, -len, wd, len + 10); ctx.restore(); };
-        hand(Math.PI * 2 * (10.2 / 12), 62, 9, '#1f2937'); hand(Math.PI * 2 * (10 / 60), 92, 6, '#1f2937'); hand(Math.PI * 2 * (40 / 60), 100, 2, '#c8363f');
+        const s = now.getSeconds(), m = now.getMinutes() + s / 60, hr = (now.getHours() % 12) + m / 60;
+        hand(Math.PI * 2 * (hr / 12), 62, 9, '#1f2937'); hand(Math.PI * 2 * (m / 60), 92, 6, '#1f2937'); hand(Math.PI * 2 * (s / 60), 100, 2, '#c8363f');
         ctx.fillStyle = '#c8363f'; ctx.beginPath(); ctx.arc(w / 2, h / 2, 7, 0, Math.PI * 2); ctx.fill();
-      });
+      }
+      const clockTex = canvasTex(256, 256, (ctx, w, h) => drawClock(ctx, w, h, new Date()));
+      let clockSecond = -1;
+      function tickClock() {
+        const now = new Date();
+        if (now.getSeconds() === clockSecond) return;
+        clockSecond = now.getSeconds();
+        const c = clockTex.image;
+        drawClock(c.getContext('2d'), c.width, c.height, now);
+        clockTex.needsUpdate = true;
+      }
       const clockRim = place(new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.26, 0.06, 40), mat(0x1f2937, { roughness: 0.35, metalness: 0.3 })), shelfX, 2.55, ROOM_Z_BACK + 0.04);
       clockRim.rotation.x = Math.PI / 2;
       const clockFace = new THREE.Mesh(new THREE.CircleGeometry(0.235, 40), new THREE.MeshStandardMaterial({ map: clockTex, roughness: 0.4 }));
@@ -3529,6 +3603,7 @@
       doorGap.rotation.x = -Math.PI / 2; doorGap.position.set(doorX, 0.006, doorZ + 0.25); scene.add(doorGap);
 
       // ── Arcade cabinet (pro mode), facing the camera ──
+      startMove();
       const arcX = 3.2, arcZ = 1.0;
       addBox(0.72, 1.6, 0.56, 0x1e2a44, arcX, 0.8, arcZ, { radius: 0.04, roughness: 0.5 });
       addBox(0.06, 1.6, 0.6, 0xf472b6, arcX - 0.37, 0.8, arcZ, { radius: 0.02, roughness: 0.4 });
@@ -3558,8 +3633,10 @@
       [[0.05, 0xf5c542], [0.15, 0x38bdf8], [0.25, 0xa3e635]].forEach(([bx, bc]) =>
         place(new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, 0.03, 16), mat(bc, { roughness: 0.3 })), arcX + bx, 0.97, arcZ + 0.4));
       addAO(arcX, arcZ, 0.46, 0.38);
+      finishMove(LAYOUT.arcade);
 
       // ── Newspaper on the floor (references) ──
+      startMove();
       const paperTex = canvasTex(768, 540, (ctx, w, h) => {
         ctx.fillStyle = '#f2ecdf'; ctx.fillRect(0, 0, w, h);
         // Bold black masthead bar so it reads as a newspaper from across the room
@@ -3586,14 +3663,17 @@
       sheetUnder.rotation.y = 0.5;
       const paper = place(new THREE.Mesh(new THREE.BoxGeometry(0.88, 0.008, 0.62), [paperMatEdge, paperMatEdge, paperMatTop, paperMatEdge, paperMatEdge, paperMatEdge]), -2.2, 0.011, 1.9);
       paper.rotation.y = 0.22;
+      finishMove(LAYOUT.paper);
 
       // ── Plant (fun fact): a leafy bush in a terracotta pot ──
+      startMove();
       const plantX = -4.8, plantZ = 2.5;
       place(new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.18, 0.34, 24), mat(0xb5603a, { roughness: 0.85 })), plantX, 0.17, plantZ);
       place(new THREE.Mesh(new THREE.TorusGeometry(0.24, 0.025, 8, 24), mat(0xb5603a, { roughness: 0.85 })), plantX, 0.34, plantZ).rotation.x = Math.PI / 2;
       [[0, 0.62, 0, 0.26, 0x2f9e57], [0.14, 0.52, 0.08, 0.2, 0x3cb371], [-0.15, 0.55, -0.05, 0.21, 0x22894a], [0.04, 0.78, -0.08, 0.18, 0x3cb371], [-0.05, 0.5, 0.15, 0.17, 0x2f9e57]]
         .forEach(([dx, y, dz, r, c]) => place(new THREE.Mesh(new THREE.IcosahedronGeometry(r, 2), mat(c, { roughness: 0.7 })), plantX + dx, y, plantZ + dz));
       addAO(plantX, plantZ, 0.38, 0.34);
+      finishMove(LAYOUT.plant);
 
       // Character — sphere head, hair cap, face, shoes
       const char = new THREE.Group();
@@ -3627,7 +3707,7 @@
       addMember(new THREE.SphereGeometry(0.032, 8, 8), 0x141010, -0.1, 1.17, 0.23);
       addMember(new THREE.SphereGeometry(0.032, 8, 8), 0x141010, 0.1, 1.17, 0.23);
       addMember(new THREE.BoxGeometry(0.11, 0.025, 0.02), 0x3a1f16, 0, 1.06, 0.26);
-      char.position.set(1.0, 0, 2.0);
+      char.position.set(0.4, 0, 3.8);
       scene.add(char);
       // No fake-AO blob here: the character already casts a real shadow from keyLight
 
@@ -3671,15 +3751,21 @@
         const side = new THREE.MeshStandardMaterial({ map: letterTexture(ch, blockColors[i]), roughness: 0.55 });
         const plain = new THREE.MeshStandardMaterial({ color: blockColors[i], roughness: 0.55 });
         const block = new THREE.Mesh(new RoundedBoxGeometry(BLOCK, BLOCK, BLOCK, 3, 0.03), [side, side, plain, plain, side, side]);
-        const p = addProp(block, -1.6 + i * 0.36, 0.45, 0.17, 'block');
+        const p = addProp(block, -0.95 + i * 0.36, 1.3, 0.17, 'block');
         p.mesh.rotation.y = (i % 2 ? 1 : -1) * 0.06;
         p.qTarget.copy(p.mesh.quaternion);
       });
       const ball = new THREE.Mesh(new THREE.SphereGeometry(0.18, 40, 28), new THREE.MeshStandardMaterial({ map: ballTexture(), roughness: 0.45 }));
-      addProp(ball, 1.6, 1.0, 0.18, 'ball');
+      addProp(ball, 1.9, 2.9, 0.18, 'ball');
       props.forEach(p => { p.home.q = p.mesh.quaternion.clone(); });
       const ballProp = props.find(p => p.kind === 'ball');
       const BALL_HOTSPOT = { key: 'game:shootout', label: '⚽ Shooting challenge' };
+      // Subtle "there's something here" cues on the ball: a soft ring pulsing on the floor + a small floating tag
+      const ballPulse = new THREE.Mesh(new THREE.RingGeometry(0.22, 0.27, 40), new THREE.MeshBasicMaterial({ color: 0x9be7ff, transparent: true, opacity: 0, depthWrite: false, toneMapped: false }));
+      ballPulse.rotation.x = -Math.PI / 2; scene.add(ballPulse);
+      const ballCta = $('#roomBallCta');
+      ballCta.addEventListener('click', () => activateHotspot('game:shootout'));
+      const ctaV = new THREE.Vector3();
       // ── Sound: tiny synthesized effects, muted toggle remembered per visitor ──
       let audioCtx = null;
       let soundOn = true;
@@ -3732,7 +3818,7 @@
       renderFound();
 
       // ── Reset + sound buttons ──
-      const SPAWN = { x: 1.0, z: 2.0 };
+      const SPAWN = { x: 0.4, z: 3.8 };
       $('#roomReset').addEventListener('click', () => {
         char.position.set(SPAWN.x, 0, SPAWN.z); charVy = 0;
         props.forEach(p => {
@@ -3752,7 +3838,7 @@
       renderSound();
 
       // ── Camera: follow + drag to orbit ──
-      const camTarget = new THREE.Vector3(1.0, 0.8, 2.0);
+      const camTarget = new THREE.Vector3(0.4, 0.8, 3.8);
       let camYaw = 0, camYawGoal = 0;
       const CAM_DIST = 5.8, CAM_HEIGHT = 5.5, YAW_LIMIT = 1.0; // wider orbit; camera X is clamped inside the side walls so nothing gets culled
       camera.position.set(0, CAM_HEIGHT, 2.0 + CAM_DIST);
@@ -4070,6 +4156,24 @@
           promptEl.hidden = false;
         } else {
           promptEl.hidden = true;
+        }
+
+        tickClock();
+
+        // Ball cues: the floor ring breathes out every ~2.4s; the tag floats above the ball,
+        // and steps aside once you're close enough for the real prompt (or while it's rolling / a card is open)
+        const phase = (performance.now() / 2400) % 1;
+        const ballSpeed = Math.hypot(ballProp.vx, ballProp.vz);
+        ballPulse.position.set(ballProp.x, 0.012, ballProp.z);
+        ballPulse.scale.setScalar(1 + phase * 1.6);
+        ballPulse.material.opacity = ballSpeed > 0.3 ? 0 : 0.32 * (1 - phase) * Math.min(1, phase * 6);
+        ctaV.set(ballProp.x, ballProp.y + 0.62 + Math.sin(performance.now() / 600) * 0.04, ballProp.z).project(camera);
+        const ctaOff = nearest === BALL_HOTSPOT || ballSpeed > 0.3 || ctaV.z > 1 || Math.abs(ctaV.x) > 0.95 || ctaV.y > 0.9
+          || !roomConfirm.hidden || roomPanel.classList.contains('open');
+        ballCta.classList.toggle('off', ctaOff);
+        if (!ctaOff) {
+          const w = stage.clientWidth, h = stage.clientHeight;
+          ballCta.style.transform = `translate(${(ctaV.x + 1) / 2 * w}px, ${(1 - ctaV.y) / 2 * h}px) translate(-50%, -100%)`;
         }
 
         draw();
